@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+dev.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Build
+dist
+build
+.next
+out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+.env*.local
+
+# Lock files (use pnpm-lock.yaml when installing dependencies)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

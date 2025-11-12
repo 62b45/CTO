@@ -1,0 +1,16 @@
+{
+  "name": "game-backend-monorepo",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "prisma": "pnpm -F backend prisma",
+    "db:migrate": "pnpm -F backend prisma migrate dev",
+    "db:seed": "cd packages/backend && pnpm exec node prisma/seed.js",
+    "db:verify": "cd packages/backend && pnpm exec node verify-seed.js",
+    "db:generate": "pnpm -F backend prisma generate"
+  },
+  "devDependencies": {}
+}
