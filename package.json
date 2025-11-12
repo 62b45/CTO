@@ -1,16 +1,25 @@
 {
-  "name": "game-backend-monorepo",
+  "name": "monorepo",
+  "version": "1.0.0",
+  "description": "PNPM monorepo with TypeScript",
   "private": true,
-  "version": "0.0.1",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "prisma": "pnpm -F backend prisma",
-    "db:migrate": "pnpm -F backend prisma migrate dev",
-    "db:seed": "cd packages/backend && pnpm exec node prisma/seed.js",
-    "db:verify": "cd packages/backend && pnpm exec node verify-seed.js",
-    "db:generate": "pnpm -F backend prisma generate"
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
+    "type-check": "pnpm -r exec tsc --noEmit"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "packageManager": "pnpm@8.6.0"
 }

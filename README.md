@@ -1,74 +1,94 @@
-# Game Backend - Prisma SQLite Schema with Seed Data
+# Monorepo
 
-This is a monorepo containing a game backend with Prisma ORM using SQLite as the database.
+A pnpm workspace monorepo with TypeScript, containing frontend, backend, and shared packages.
 
 ## Structure
 
-- `packages/backend` - The backend package with Prisma models and migrations
-- `packages/shared` - Shared types package for type definitions used across backend and frontend
+```
+.
+├── apps/
+│   ├── frontend/     # Frontend application
+│   └── backend/      # Backend application
+├── packages/
+│   └── shared/       # Shared utilities and types
+├── package.json      # Root package.json with workspace configuration
+├── tsconfig.json     # Base TypeScript configuration
+├── .eslintrc.js      # ESLint configuration
+├── .prettierrc       # Prettier configuration
+└── .env.example      # Environment variables template
+```
 
-## Setup
+## Getting Started
 
-### Install Dependencies
+### Prerequisites
+
+- Node.js (v18 or higher)
+- pnpm (v8 or higher)
+
+### Installation
 
 ```bash
 pnpm install
-pnpm approve-builds
 ```
 
-### Database Migration
-
-To run database migrations:
+### Development
 
 ```bash
-pnpm prisma migrate dev
+# Start all applications in development mode
+pnpm dev
+
+# Start specific applications
+pnpm --filter frontend dev
+pnpm --filter backend dev
 ```
 
-### Database Seeding
-
-To seed the database with starter data:
+### Building
 
 ```bash
-cd packages/backend
-pnpm exec node prisma/seed.js
+# Build all packages
+pnpm build
+
+# Build specific packages
+pnpm --filter frontend build
+pnpm --filter backend build
 ```
 
-## Models
+### Linting and Formatting
 
-The schema includes the following models:
+```bash
+# Run ESLint
+pnpm lint
 
-- **Player**: Player profile with stats and progression
-- **ItemDefinition**: Defines available items
-- **InventoryItem**: Player's inventory items
-- **Mob**: Enemies and creatures
-- **Boss**: Special boss entities linked to mobs
-- **Dungeon**: Dungeon areas
-- **DungeonFloor**: Individual floors within dungeons
-- **DungeonFloorMob**: Spawn configuration for mobs on floors
-- **Quest**: Player quest progress
-- **QuestDefinition**: Quest definitions and rewards
-- **QuestReward**: Rewards for completing quests
-- **Lootbox**: Loot tables for mobs
-- **LootboxItem**: Items that can drop from lootboxes
-- **Cooldown**: Action cooldowns for players
-- **ProfessionProgress**: Profession/skill progression
-- **EventState**: Temporary event states
-- **DungeonProgress**: Player's progress in dungeons
+# Fix ESLint issues
+pnpm lint:fix
 
-## Types
+# Format code with Prettier
+pnpm format
 
-Shared types are defined in `packages/shared/index.ts` and include enums for:
+# Type check all packages
+pnpm type-check
+```
 
-- ProfessionType
-- ItemRarity
-- ItemType
-- MobType
-- QuestStatus
-- QuestRewardType
-- DungeonDifficulty
+## Environment Variables
 
-## Database
+Copy `.env.example` to `.env` and fill in your environment-specific values:
 
-The database is SQLite and is located at `packages/backend/dev.db` for development.
+```bash
+cp .env.example .env
+```
 
-Note: SQLite doesn't support native enums in Prisma, so enum values are stored as strings in the database.
+## Workspace Scripts
+
+- `pnpm -r <command>` - Run command in all packages
+- `pnpm --filter <package> <command>` - Run command in specific package
+- `pnpm --filter "*frontend*" <command>` - Run command in packages matching pattern
+
+## TypeScript Path Aliases
+
+Shared packages can be imported using path aliases:
+
+```typescript
+import { sharedUtility } from '@shared/utils';
+```
+
+This is configured in the root `tsconfig.json` and should be inherited by all workspace packages.
