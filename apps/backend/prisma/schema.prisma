@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id         String          @id
+  name       String
+  level      Int             @default(1)
+  experience Int             @default(0)
+  health     Int             @default(100)
+  maxHealth  Int             @default(100)
+  energy     Int             @default(100)
+  maxEnergy  Int             @default(100)
+  gold       Int             @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  sessions   PlayerSession[]
+
+  @@map("players")
+}
+
+model PlayerSession {
+  id           String   @id @default(uuid())
+  playerId     String
+  player       Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  status       String   @default("ACTIVE")
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([playerId])
+  @@map("player_sessions")
+}

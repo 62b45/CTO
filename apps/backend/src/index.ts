@@ -1,75 +1,59 @@
-/**
- * Backend application entry point
- */
+import 'dotenv/config';
+import http from 'http';
+import { env } from './config';
+import { createApp } from './app';
+import { prisma } from './lib/prisma';
 
-import { User, isValidEmail, Config } from '@shared';
+const app = createApp();
+const server = http.createServer(app);
 
-// Placeholder configuration
-const config: Config = {
-  apiUrl: 'http://localhost:3000',
-  environment: 'development',
-  features: {
-    authentication: true,
-    analytics: false,
-  },
+const start = async () => {
+  server.listen(env.port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Backend server running on http://localhost:${env.port}`);
+  });
 };
 
-// Placeholder user service
-class UserService {
-  private users: User[] = [
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
+start().catch(error => {
+  // eslint-disable-next-line no-console
+  console.error('Failed to start server', error);
+  process.exit(1);
+});
 
-  getAllUsers(): User[] {
-    return this.users;
-  }
+const gracefulShutdown = async (signal: NodeJS.Signals) => {
+  // eslint-disable-next-line no-console
+  console.log(`Received ${signal}, shutting down gracefully`);
 
-  getUserById(id: string): User | undefined {
-    return this.users.find(user => user.id === id);
-  }
+  server.close(async closeError => {
+    if (closeError) {
+      // eslint-disable-next-line no-console
+      console.error('Error during server shutdown', closeError);
+      process.exit(1);
+    }
 
-  validateUserEmail(email: string): boolean {
-    return isValidEmail(email);
-  }
-}
+    try {
+      await prisma.$disconnect();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error disconnecting Prisma', error);
+    } finally {
+      process.exit(0);
+    }
+  });
+};
 
-// Main application function
-function main(): void {
-  console.log('Backend Application Started');
-  console.log('Environment:', config.environment);
-  console.log('Features:', config.features);
+['SIGTERM', 'SIGINT'].forEach(signal => {
+  process.on(signal as NodeJS.Signals, gracefulShutdown);
+});
 
-  const userService = new UserService();
+process.on('uncaughtException', error => {
+  // eslint-disable-next-line no-console
+  console.error('Uncaught exception', error);
+  gracefulShutdown('SIGTERM');
+});
 
-  // Demonstrate functionality
-  const allUsers = userService.getAllUsers();
-  console.log('Total users:', allUsers.length);
-
-  const user = userService.getUserById('1');
-  if (user) {
-    console.log('Found user:', user.name);
-    console.log('Email valid:', userService.validateUserEmail(user.email));
-  }
-
-  console.log('Backend application running successfully');
-}
-
-// Start the application
-if (require.main === module) {
-  main();
-}
-
-export { main, UserService };
+process.on('unhandledRejection', error => {
+  // eslint-disable-next-line no-console
+  console.error('Unhandled rejection', error);
+  gracefulShutdown('SIGTERM');
+});
