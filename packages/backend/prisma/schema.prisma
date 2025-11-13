@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Note: SQLite doesn't support native enums, so we use String fields
+// with validation. TypeScript types are exported from the shared package.
+
+// Main Models
+
+model Player {
+  id                 String      @id @default(cuid())
+  userId             String      @unique
+  name               String
+  level              Int         @default(1)
+  experience         Int         @default(0)
+  health             Int         @default(100)
+  mana               Int         @default(50)
+  currency           Int         @default(0)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  
+  inventory          InventoryItem[]
+  quests             Quest[]
+  cooldowns          Cooldown[]
+  professionProgress ProfessionProgress[]
+  eventStates        EventState[]
+  dungeonProgresses  DungeonProgress[]
+
+  @@map("players")
+}
+
+model ItemDefinition {
+  id                 String      @id @default(cuid())
+  name               String      @unique
+  description        String
+  type               String      // ItemType: WEAPON, ARMOR, CONSUMABLE, QUEST_ITEM, INGREDIENT, LOOT
+  rarity             String      // ItemRarity: COMMON, UNCOMMON, RARE, EPIC, LEGENDARY
+  sellValue          Int         @default(1)
+  buyValue           Int         @default(1)
+  maxStackSize       Int         @default(1)
+  imageUrl           String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  
+  inventoryItems    InventoryItem[]
+  questRewards      QuestReward[]
+  lootboxItems      LootboxItem[]
+
+  @@map("item_definitions")
+}
+
+model InventoryItem {
+  id                String         @id @default(cuid())
+  playerId          String
+  itemDefinitionId  String
+  quantity          Int            @default(1)
+  acquiredAt        DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  player            Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  itemDefinition    ItemDefinition @relation(fields: [itemDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, itemDefinitionId])
+  @@map("inventory_items")
+}
+
+model Mob {
+  id                String    @id @default(cuid())
+  name              String
+  mobType           String    @default("COMMON") // MobType: COMMON, ELITE, BOSS
+  level             Int
+  health            Int
+  mana              Int
+  attackPower       Int
+  defensePower      Int
+  experienceReward  Int
+  currencyReward    Int
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  boss              Boss?
+  dungeonFloors     DungeonFloorMob[]
+  lootbox           Lootbox?
+
+  @@map("mobs")
+}
+
+model Boss {
+  id                String    @id @default(cuid())
+  mobId             String    @unique
+  name              String
+  description       String?
+  phaseCount        Int       @default(1)
+  specialAbility    String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  mob               Mob       @relation(fields: [mobId], references: [id], onDelete: Cascade)
+
+  @@map("bosses")
+}
+
+model Dungeon {
+  id                String    @id @default(cuid())
+  name              String    @unique
+  description       String
+  difficulty        String    @default("NORMAL") // DungeonDifficulty: EASY, NORMAL, HARD, NIGHTMARE
+  minimumLevel      Int       @default(1)
+  recommendedLevel  Int       @default(5)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  floors            DungeonFloor[]
+  progresses        DungeonProgress[]
+
+  @@map("dungeons")
+}
+
+model DungeonFloor {
+  id                String              @id @default(cuid())
+  dungeonId         String
+  floorNumber       Int
+  name              String
+  description       String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  dungeon           Dungeon             @relation(fields: [dungeonId], references: [id], onDelete: Cascade)
+  mobs              DungeonFloorMob[]
+
+  @@unique([dungeonId, floorNumber])
+  @@map("dungeon_floors")
+}
+
+model DungeonFloorMob {
+  id                String        @id @default(cuid())
+  dungeonFloorId    String
+  mobId             String
+  spawnWeight       Int           @default(1)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  dungeonFloor      DungeonFloor  @relation(fields: [dungeonFloorId], references: [id], onDelete: Cascade)
+  mob               Mob           @relation(fields: [mobId], references: [id], onDelete: Cascade)
+
+  @@map("dungeon_floor_mobs")
+}
+
+model Quest {
+  id                String          @id @default(cuid())
+  playerId          String
+  questDefinitionId String
+  status            String          @default("AVAILABLE") // QuestStatus: AVAILABLE, IN_PROGRESS, COMPLETED, FAILED, ABANDONED
+  progress          Int             @default(0)
+  targetProgress    Int             @default(1)
+  startedAt         DateTime        @default(now())
+  completedAt       DateTime?
+  updatedAt         DateTime        @updatedAt
+  
+  player            Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  questDefinition   QuestDefinition @relation(fields: [questDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, questDefinitionId])
+  @@map("quests")
+}
+
+model QuestDefinition {
+  id                String          @id @default(cuid())
+  name              String          @unique
+  description       String
+  minimumLevel      Int             @default(1)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  quests            Quest[]
+  rewards           QuestReward[]
+
+  @@map("quest_definitions")
+}
+
+model QuestReward {
+  id                String             @id @default(cuid())
+  questDefinitionId String
+  rewardType        String             // QuestRewardType: EXPERIENCE, ITEM, CURRENCY
+  itemDefinitionId  String?
+  amount            Int                @default(1)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  questDefinition   QuestDefinition    @relation(fields: [questDefinitionId], references: [id], onDelete: Cascade)
+  itemDefinition    ItemDefinition?    @relation(fields: [itemDefinitionId], references: [id], onDelete: SetNull)
+
+  @@map("quest_rewards")
+}
+
+model Lootbox {
+  id                String    @id @default(cuid())
+  mobId             String    @unique
+  rarity            String    @default("COMMON") // ItemRarity: COMMON, UNCOMMON, RARE, EPIC, LEGENDARY
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  mob               Mob       @relation(fields: [mobId], references: [id], onDelete: Cascade)
+  items             LootboxItem[]
+
+  @@map("lootboxes")
+}
+
+model LootboxItem {
+  id                String         @id @default(cuid())
+  lootboxId         String
+  itemDefinitionId  String
+  dropChance        Int            @default(100)
+  minQuantity       Int            @default(1)
+  maxQuantity       Int            @default(1)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  lootbox           Lootbox        @relation(fields: [lootboxId], references: [id], onDelete: Cascade)
+  itemDefinition    ItemDefinition @relation(fields: [itemDefinitionId], references: [id], onDelete: Cascade)
+
+  @@map("lootbox_items")
+}
+
+model Cooldown {
+  id                String    @id @default(cuid())
+  playerId          String
+  action            String
+  expiresAt         DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  player            Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, action])
+  @@map("cooldowns")
+}
+
+model ProfessionProgress {
+  id                String    @id @default(cuid())
+  playerId          String
+  professionType    String    // ProfessionType: FISHING, COOKING, CRAFTING, SMITHING, ALCHEMY
+  level             Int       @default(1)
+  experience        Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  player            Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, professionType])
+  @@map("profession_progresses")
+}
+
+model EventState {
+  id                String    @id @default(cuid())
+  playerId          String
+  eventKey          String
+  value             String
+  expiresAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  player            Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, eventKey])
+  @@map("event_states")
+}
+
+model DungeonProgress {
+  id                String    @id @default(cuid())
+  playerId          String
+  dungeonId         String
+  highestFloor      Int       @default(0)
+  timesCompleted    Int       @default(0)
+  bestTime          Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  player            Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  dungeon           Dungeon   @relation(fields: [dungeonId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, dungeonId])
+  @@map("dungeon_progresses")
+}

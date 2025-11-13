@@ -1,0 +1,19 @@
+{
+  "name": "@backend/prisma",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "prisma": "prisma",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "node prisma/seed.js",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.8.0",
+    "@shared/types": "workspace:*"
+  },
+  "devDependencies": {
+    "prisma": "^5.8.0"
+  }
+}
