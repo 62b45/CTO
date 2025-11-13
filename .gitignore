@@ -49,6 +49,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+apps/backend/data/
 
 # Coverage directory used by tools like istanbul
 coverage/

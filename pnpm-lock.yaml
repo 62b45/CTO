@@ -38,10 +38,25 @@ importers:
       '@shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      express:
+        specifier: ^4.18.2
+        version: 4.18.2
     devDependencies:
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.21
+      '@types/supertest':
+        specifier: ^2.0.12
+        version: 2.0.12
+      supertest:
+        specifier: ^6.3.4
+        version: 6.3.4
       typescript:
         specifier: ^5.0.0
         version: 5.0.2
+      vitest:
+        specifier: ^0.34.0
+        version: 0.34.0
 
   apps/frontend:
     dependencies:
