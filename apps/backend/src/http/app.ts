@@ -26,6 +26,8 @@ import { ProfessionService } from '../professions/service';
 import type { EconomyService } from '../economy/service';
 import { DungeonService } from '../dungeons/service';
 import { ArenaService } from '../arena/service';
+import type { LootboxService } from '../lootbox/service';
+import type { EventService } from '../events/service';
 
 export interface CreateAppOptions {
   service: ActionCooldownService;
@@ -34,6 +36,8 @@ export interface CreateAppOptions {
   economyService?: EconomyService;
   dungeonService?: DungeonService;
   arenaService?: ArenaService;
+  lootboxService?: LootboxService;
+  eventService?: EventService;
   handlers?: Partial<Record<ActionType, ActionHandler>>;
   logger?: Pick<Console, 'error'>;
 }
@@ -197,6 +201,8 @@ export function createApp({
   economyService,
   dungeonService,
   arenaService,
+  lootboxService,
+  eventService,
   handlers: overrides,
   logger,
 }: CreateAppOptions): Express {
@@ -1166,6 +1172,208 @@ export function createApp({
       } catch (error) {
         errLogger.error(
           'Error fetching arena leaderboard: %s',
+          (error as Error).stack ?? String(error)
+        );
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error',
+        });
+      }
+    });
+  }
+
+  if (lootboxService) {
+    app.get(
+      '/lootbox/probabilities/:playerId',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const probabilities = await lootboxService.getProbabilities(playerId);
+          const pityCounter = lootboxService.getPityCounter(playerId);
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              probabilities,
+              pityCounter,
+              pityThreshold: 40,
+            },
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error fetching lootbox probabilities: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/lootbox/open/:playerId',
+      async (
+        req: Request<{ playerId: string }>,
+        res: Response
+      ) => {
+        try {
+          const { playerId } = req.params;
+          const { lootboxId, cost } = req.body as {
+            lootboxId: string;
+            cost: number;
+          };
+
+          if (!lootboxId || !cost) {
+            res.status(400).json({
+              success: false,
+              message: 'lootboxId and cost are required',
+            });
+            return;
+          }
+
+          const result = await lootboxService.openLootbox(
+            playerId,
+            lootboxId,
+            cost
+          );
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              result: {
+                item: {
+                  ...result.item,
+                },
+                rarity: result.rarity,
+                isPityDrop: result.isPityDrop,
+                pityCounterReset: result.pityCounterReset,
+                animationDuration: result.animationDuration,
+              },
+            },
+          });
+        } catch (error) {
+          const message = (error as Error).message;
+          if (message.includes('Insufficient')) {
+            res.status(400).json({
+              success: false,
+              message,
+            });
+            return;
+          }
+
+          errLogger.error(
+            'Error opening lootbox: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+  }
+
+  if (eventService) {
+    app.get('/events/schedule', async (_req, res: Response) => {
+      try {
+        const schedule = eventService.getSchedule();
+
+        res.json({
+          success: true,
+          data: {
+            upcoming: schedule.upcoming.map(event => ({
+              id: event.id,
+              type: event.type,
+              name: event.name,
+              description: event.description,
+              startsAt: event.startsAt.toISOString(),
+              endsAt: event.endsAt.toISOString(),
+            })),
+            active: schedule.active.map(event => ({
+              id: event.id,
+              type: event.type,
+              name: event.name,
+              description: event.description,
+              modifiers: event.modifiers,
+              startsAt: event.startsAt.toISOString(),
+              endsAt: event.endsAt.toISOString(),
+            })),
+            completed: schedule.completed.map(event => ({
+              id: event.id,
+              type: event.type,
+              name: event.name,
+              endsAt: event.endsAt.toISOString(),
+            })),
+          },
+        });
+      } catch (error) {
+        errLogger.error(
+          'Error fetching event schedule: %s',
+          (error as Error).stack ?? String(error)
+        );
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error',
+        });
+      }
+    });
+
+    app.get('/events/active', async (_req, res: Response) => {
+      try {
+        const activeEvents = eventService.getActiveEvents();
+        const modifiers = eventService.getActiveModifiers();
+
+        res.json({
+          success: true,
+          data: {
+            events: activeEvents.map(event => ({
+              id: event.id,
+              type: event.type,
+              name: event.name,
+              description: event.description,
+              startsAt: event.startsAt.toISOString(),
+              endsAt: event.endsAt.toISOString(),
+            })),
+            combinedModifiers: modifiers,
+          },
+        });
+      } catch (error) {
+        errLogger.error(
+          'Error fetching active events: %s',
+          (error as Error).stack ?? String(error)
+        );
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error',
+        });
+      }
+    });
+
+    app.get('/events/next', async (_req, res: Response) => {
+      try {
+        const nextEvent = eventService.getNextEvent();
+
+        res.json({
+          success: true,
+          data: nextEvent
+            ? {
+                id: nextEvent.id,
+                type: nextEvent.type,
+                name: nextEvent.name,
+                description: nextEvent.description,
+                startsAt: nextEvent.startsAt.toISOString(),
+                endsAt: nextEvent.endsAt.toISOString(),
+              }
+            : null,
+        });
+      } catch (error) {
+        errLogger.error(
+          'Error fetching next event: %s',
           (error as Error).stack ?? String(error)
         );
         res.status(500).json({
