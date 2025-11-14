@@ -161,3 +161,200 @@ export enum EventType {
   RIFT_INVASION = 'RIFT_INVASION',
   TRIALS = 'TRIALS',
 }
+
+export interface CombatStats {
+  health: number;
+  maxHealth: number;
+  attack: number;
+  defense: number;
+  speed: number;
+}
+
+export interface Weapon {
+  id: string;
+  name: string;
+  baseDamage: number;
+  multiplier: number;
+}
+
+export type CombatActionType = 'attack' | 'defend' | 'skill';
+
+export interface CombatAction {
+  attackerId: string;
+  targetId: string;
+  type: CombatActionType;
+  damage?: number;
+  roll?: number;
+  variance?: number;
+}
+
+export interface CombatLogEntry {
+  turn: number;
+  timestamp: Date;
+  action: CombatAction;
+  description: string;
+  remainingHealth: Record<string, number>;
+}
+
+export interface CombatRewards {
+  experience: number;
+  gold: number;
+  items?: string[];
+}
+
+export interface Combatant {
+  id: string;
+  name: string;
+  stats: CombatStats;
+  weapon?: Weapon;
+  isPlayer?: boolean;
+}
+
+export interface CombatResult {
+  winner: string;
+  loser: string;
+  turns: number;
+  logs: CombatLogEntry[];
+  rewards: CombatRewards;
+}
+
+export interface CombatSimulationRequest {
+  playerId: string;
+  playerStats: CombatStats;
+  playerWeapon: Weapon;
+  enemyTemplateId: string;
+  seed?: number;
+}
+
+export interface CombatSimulationResponse {
+  result: CombatResult;
+  updatedPlayerStats: CombatStats;
+}
+
+export interface EnemyTemplate {
+  id: string;
+  name: string;
+  stats: CombatStats;
+  weapon?: Weapon;
+  rewards: CombatRewards;
+}
+
+export interface DungeonUnlockRequirements {
+  minLevel?: number;
+  prerequisites?: string[];
+}
+
+export interface DungeonReward {
+  experience: number;
+  gold: number;
+  items?: string[];
+}
+
+export interface DungeonEnemy {
+  id: string;
+  name: string;
+  stats: CombatStats;
+  weapon?: Weapon;
+}
+
+export interface DungeonBossPhase {
+  phase: number;
+  description?: string;
+  enemy: DungeonEnemy;
+  rewards?: DungeonReward;
+  drops?: string[];
+}
+
+export interface DungeonBossDefinition {
+  id: string;
+  name: string;
+  phases: DungeonBossPhase[];
+  rewards: DungeonReward;
+  drops?: string[];
+}
+
+export interface DungeonFloor {
+  floor: number;
+  name: string;
+  description?: string;
+  type: 'combat' | 'boss';
+  enemy?: DungeonEnemy;
+  boss?: DungeonBossDefinition;
+  rewards: DungeonReward;
+  unlockRequirements?: DungeonUnlockRequirements;
+}
+
+export interface DungeonDefinition {
+  id: string;
+  name: string;
+  area: Area;
+  unlockRequirements: DungeonUnlockRequirements;
+  floors: DungeonFloor[];
+}
+
+export interface DungeonRunRewardSummary {
+  experience: number;
+  gold: number;
+  items: string[];
+}
+
+export interface DungeonRunState {
+  dungeonId: string;
+  status: 'in_progress' | 'completed';
+  currentFloor: number;
+  currentBossPhase?: number | null;
+  floorsCleared: number[];
+  accumulatedRewards: DungeonRunRewardSummary;
+  startedAt: Date;
+  updatedAt: Date;
+  lastOutcome?: 'win' | 'loss';
+}
+
+export interface DungeonProgress {
+  dungeonId: string;
+  highestFloorReached: number;
+  timesCompleted: number;
+  lastCompletedAt?: Date;
+  lastResetAt?: Date;
+  activeRun?: DungeonRunState | null;
+}
+
+export interface PlayerDungeonState {
+  playerId: string;
+  dungeons: Record<string, DungeonProgress>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ArenaOpponent {
+  id: string;
+  name: string;
+  level: number;
+  stats: CombatStats;
+  weapon: Weapon;
+  modifier: number;
+  seed: number;
+}
+
+export interface ArenaMatchRecord {
+  matchId: string;
+  playerId: string;
+  opponent: ArenaOpponent;
+  outcome: 'win' | 'loss';
+  turns: number;
+  rewards: CombatRewards;
+  timestamp: Date;
+  logs: CombatLogEntry[];
+}
+
+export interface PlayerArenaState {
+  playerId: string;
+  rating: number;
+  wins: number;
+  losses: number;
+  streak: number;
+  bestStreak: number;
+  history: ArenaMatchRecord[];
+  createdAt: Date;
+  updatedAt: Date;
+}
