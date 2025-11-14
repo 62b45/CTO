@@ -8,6 +8,7 @@ import { InventoryPage } from './pages/Inventory';
 import { CraftingPage } from './pages/Crafting';
 import { DungeonsPage } from './pages/Dungeons';
 import { ArenaPage } from './pages/Arena';
+import { LootboxPage } from './pages/Lootbox';
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
         <Route path="crafting" element={<CraftingPage />} />
         <Route path="dungeons" element={<DungeonsPage />} />
         <Route path="arena" element={<ArenaPage />} />
+        <Route path="lootbox" element={<LootboxPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
