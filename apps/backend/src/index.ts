@@ -16,6 +16,9 @@ import { DungeonService } from './dungeons/service';
 import { ArenaService } from './arena/service';
 import { LootboxService } from './lootbox/service';
 import { EventService } from './events/service';
+import { SaveService } from './save/service';
+import { PlayerStateService } from './save/playerStateService';
+import { AdminService } from './admin/service';
 
 export interface ServerConfig {
   port?: number;
@@ -100,6 +103,23 @@ export function buildServer(config: ServerConfig = {}): BuiltServer {
     economyService
   );
   const eventService = new EventService();
+  const saveService = new SaveService();
+  const playerStateService = new PlayerStateService({
+    progressionRepository,
+    professionsRepository,
+    inventoryRepository,
+    dungeonRepository,
+    arenaRepository,
+    cooldownRepository: repository,
+  });
+  const adminService = new AdminService({
+    progressionService,
+    progressionRepository,
+    professionService,
+    economyService,
+    cooldownService: service,
+    eventService,
+  });
 
   const app = createApp({
     service,
@@ -110,6 +130,9 @@ export function buildServer(config: ServerConfig = {}): BuiltServer {
     arenaService,
     lootboxService,
     eventService,
+    saveService,
+    playerStateService,
+    adminService,
   });
 
   return {
@@ -146,4 +169,7 @@ export {
   FileArenaRepository,
   LootboxService,
   EventService,
+  SaveService,
+  PlayerStateService,
+  AdminService,
 };

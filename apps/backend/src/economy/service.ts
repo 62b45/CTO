@@ -321,4 +321,12 @@ export class EconomyService {
   calculateEnchantingBonus(enchanterLevel: number): number {
     return 1 + (enchanterLevel - 1) * 0.02;
   }
+
+  async updateInventory(
+    playerId: string,
+    inventory: PlayerInventory
+  ): Promise<void> {
+    inventory.updatedAt = new Date(this.clock());
+    await this.repository.set(playerId, inventory);
+  }
 }

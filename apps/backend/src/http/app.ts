@@ -28,6 +28,10 @@ import { DungeonService } from '../dungeons/service';
 import { ArenaService } from '../arena/service';
 import type { LootboxService } from '../lootbox/service';
 import type { EventService } from '../events/service';
+import type { SaveService } from '../save/service';
+import type { PlayerStateService } from '../save/playerStateService';
+import type { AdminService } from '../admin/service';
+import { createAdminAuthMiddleware } from '../admin/middleware';
 
 export interface CreateAppOptions {
   service: ActionCooldownService;
@@ -38,6 +42,9 @@ export interface CreateAppOptions {
   arenaService?: ArenaService;
   lootboxService?: LootboxService;
   eventService?: EventService;
+  saveService?: SaveService;
+  playerStateService?: PlayerStateService;
+  adminService?: AdminService;
   handlers?: Partial<Record<ActionType, ActionHandler>>;
   logger?: Pick<Console, 'error'>;
 }
@@ -203,6 +210,9 @@ export function createApp({
   arenaService,
   lootboxService,
   eventService,
+  saveService,
+  playerStateService,
+  adminService,
   handlers: overrides,
   logger,
 }: CreateAppOptions): Express {
@@ -285,6 +295,19 @@ export function createApp({
         });
         const now = Date.now();
         const remainingMs = Math.max(0, outcome.availableAt - now);
+
+        if (saveService) {
+          saveService.logSnapshot({
+            playerId,
+            timestamp: new Date(outcome.triggeredAt),
+            action,
+            data: {
+              triggeredAt: outcome.triggeredAt,
+              availableAt: outcome.availableAt,
+              result: outcome.result,
+            },
+          });
+        }
 
         res.json({
           success: true,
@@ -1382,6 +1405,275 @@ export function createApp({
         });
       }
     });
+  }
+
+  if (playerStateService) {
+    app.get(
+      '/players/:playerId/export',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const exportedState =
+            await playerStateService.exportPlayerState(playerId);
+
+          res.json({
+            success: true,
+            data: exportedState,
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error exporting player state: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/players/:playerId/import',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const { state, overwrite } = req.body as {
+            state: unknown;
+            overwrite?: boolean;
+          };
+
+          if (!state || typeof state !== 'object') {
+            res.status(400).json({
+              success: false,
+              message: 'Invalid state data',
+            });
+            return;
+          }
+
+          const result = await playerStateService.importPlayerState(
+            state as Parameters<typeof playerStateService.importPlayerState>[0],
+            { overwrite }
+          );
+
+          if (result.success) {
+            res.json({
+              success: true,
+              data: result.imported,
+            });
+          } else {
+            res.status(400).json({
+              success: false,
+              message: 'Import validation failed',
+              errors: result.errors,
+            });
+          }
+        } catch (error) {
+          errLogger.error(
+            'Error importing player state: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+  }
+
+  if (adminService) {
+    const adminAuth = createAdminAuthMiddleware();
+
+    app.post(
+      '/admin/players/:playerId/resources',
+      adminAuth,
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const { coins, gems } = req.body as {
+            coins?: number;
+            gems?: number;
+          };
+          const performedBy = req.headers['x-admin-user'] as
+            | string
+            | undefined;
+
+          await adminService.adjustResources(
+            playerId,
+            { coins, gems },
+            performedBy
+          );
+
+          res.json({
+            success: true,
+            message: 'Resources adjusted successfully',
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error adjusting resources: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/admin/players/:playerId/experience',
+      adminAuth,
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const { amount } = req.body as { amount: number };
+          const performedBy = req.headers['x-admin-user'] as
+            | string
+            | undefined;
+
+          if (!amount || typeof amount !== 'number') {
+            res.status(400).json({
+              success: false,
+              message: 'Amount is required and must be a number',
+            });
+            return;
+          }
+
+          await adminService.adjustExperience(playerId, amount, performedBy);
+
+          res.json({
+            success: true,
+            message: 'Experience adjusted successfully',
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error adjusting experience: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/admin/players/:playerId/stats',
+      adminAuth,
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const stats = req.body as Partial<PlayerStats>;
+          const performedBy = req.headers['x-admin-user'] as
+            | string
+            | undefined;
+
+          await adminService.adjustStats(playerId, stats, performedBy);
+
+          res.json({
+            success: true,
+            message: 'Stats adjusted successfully',
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error adjusting stats: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/admin/players/:playerId/cooldowns/reset',
+      adminAuth,
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const { action } = req.body as { action?: string };
+          const performedBy = req.headers['x-admin-user'] as
+            | string
+            | undefined;
+
+          if (action && isActionType(action)) {
+            await adminService.resetCooldown(
+              playerId,
+              action as ActionType,
+              performedBy
+            );
+            res.json({
+              success: true,
+              message: `Cooldown for ${action} reset successfully`,
+            });
+          } else if (!action) {
+            await adminService.resetAllCooldowns(playerId, performedBy);
+            res.json({
+              success: true,
+              message: 'All cooldowns reset successfully',
+            });
+          } else {
+            res.status(400).json({
+              success: false,
+              message: `Invalid action: ${action}`,
+            });
+          }
+        } catch (error) {
+          errLogger.error(
+            'Error resetting cooldowns: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.get(
+      '/admin/audit',
+      adminAuth,
+      async (req: Request, res: Response) => {
+        try {
+          const limit = req.query.limit
+            ? Number.parseInt(req.query.limit as string, 10)
+            : undefined;
+          const playerId = req.query.playerId as string | undefined;
+
+          const auditLog = playerId
+            ? adminService.getPlayerAuditLog(playerId, limit)
+            : adminService.getAuditLog(limit);
+
+          res.json({
+            success: true,
+            data: {
+              entries: auditLog.map(entry => ({
+                timestamp: entry.timestamp.toISOString(),
+                action: entry.action,
+                playerId: entry.playerId,
+                details: entry.details,
+                performedBy: entry.performedBy,
+              })),
+            },
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error fetching audit log: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
   }
 
   return app;

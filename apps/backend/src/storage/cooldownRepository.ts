@@ -15,6 +15,8 @@ export interface CooldownRepository {
     action: ActionType,
     entry: CooldownEntry
   ): Promise<void>;
+  delete(playerId: string, action: ActionType): Promise<void>;
+  getAll(playerId: string): Promise<Record<ActionType, CooldownEntry>>;
 }
 
 interface PersistedTable {
@@ -77,5 +79,18 @@ export class FileCooldownRepository implements CooldownRepository {
     table[playerId] = table[playerId] ?? {};
     table[playerId]![action] = entry;
     await this.persist();
+  }
+
+  async delete(playerId: string, action: ActionType): Promise<void> {
+    const table = await this.ensureLoaded();
+    if (table[playerId]) {
+      delete table[playerId]![action];
+      await this.persist();
+    }
+  }
+
+  async getAll(playerId: string): Promise<Record<ActionType, CooldownEntry>> {
+    const table = await this.ensureLoaded();
+    return (table[playerId] ?? {}) as Record<ActionType, CooldownEntry>;
   }
 }
