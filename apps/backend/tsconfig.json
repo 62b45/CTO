@@ -2,8 +2,14 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": ".",
+    "composite": false,
+    "skipLibCheck": true,
+    "paths": {
+      "@shared": ["../../packages/shared/src"],
+      "@shared/*": ["../../packages/shared/src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]

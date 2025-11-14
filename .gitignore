@@ -1,4 +1,25 @@
 # Dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+dev.db
+
+# IDE
+.vscode
+.idea
 node_modules/
 .pnpm-store/
 
@@ -28,6 +49,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+apps/backend/data/
 
 # Coverage directory used by tools like istanbul
 coverage/

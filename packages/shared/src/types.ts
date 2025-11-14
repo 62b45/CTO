@@ -25,78 +25,30 @@ export interface Config {
   };
 }
 
-// Combat Engine Types
-export interface Weapon {
-  id: string;
-  name: string;
-  baseDamage: number;
-  multiplier: number;
+export interface PlayerStats {
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
 }
 
-export interface CombatStats {
+export interface DerivedStats {
   health: number;
-  maxHealth: number;
-  attack: number;
-  defense: number;
-  speed: number;
+  mana: number;
+  attackPower: number;
+  defensePower: number;
 }
 
-export interface Combatant {
-  id: string;
-  name: string;
-  stats: CombatStats;
-  weapon?: Weapon;
-  isPlayer: boolean;
-}
-
-export interface CombatAction {
-  attackerId: string;
-  targetId: string;
-  type: 'attack' | 'defend' | 'skill';
-  damage?: number;
-  roll?: number;
-  variance?: number;
-}
-
-export interface CombatLogEntry {
-  turn: number;
-  timestamp: Date;
-  action: CombatAction;
-  description: string;
-  remainingHealth: { [combatantId: string]: number };
-}
-
-export interface CombatResult {
-  winner: string;
-  loser: string;
-  turns: number;
-  logs: CombatLogEntry[];
-  rewards: CombatRewards;
-}
-
-export interface CombatRewards {
-  experience: number;
-  gold: number;
-  items?: string[];
-}
-
-export interface EnemyTemplate {
-  id: string;
-  name: string;
-  stats: CombatStats;
-  weapon?: Weapon;
-  rewards: CombatRewards;
-}
-
-export interface CombatSimulationRequest {
+export interface PlayerProgression {
   playerId: string;
-  playerStats: CombatStats;
-  playerWeapon: Weapon;
-  enemyTemplateId: string;
-  seed?: number; // For deterministic RNG
-}
-
-export interface CombatSimulationResponse {
-  result: CombatResult;
-  updatedPlayerStats: CombatStats;
+  level: number;
+  currentXp: number;
+  totalXpEarned: number;
+  baseStats: PlayerStats;
+  derivedStats: DerivedStats;
+  recentLevelGains: number[];
+  createdAt: Date;
+  updatedAt: Date;
 }
