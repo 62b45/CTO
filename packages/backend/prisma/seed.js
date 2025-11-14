@@ -26,7 +26,7 @@ async function main() {
 
   // Create Item Definitions
   console.log('Creating item definitions...');
-  
+
   const ironSword = await prisma.itemDefinition.create({
     data: {
       name: 'Iron Sword',
@@ -137,7 +137,7 @@ async function main() {
 
   // Create Mobs
   console.log('Creating mobs...');
-  
+
   const goblin = await prisma.mob.create({
     data: {
       name: 'Goblin',
@@ -196,7 +196,7 @@ async function main() {
 
   // Create Boss
   console.log('Creating bosses...');
-  
+
   const dragonBossRecord = await prisma.boss.create({
     data: {
       mobId: dragonBoss.id,
@@ -209,7 +209,7 @@ async function main() {
 
   // Create Dungeons
   console.log('Creating dungeons...');
-  
+
   const goblinCave = await prisma.dungeon.create({
     data: {
       name: 'Goblin Cave',
@@ -232,7 +232,7 @@ async function main() {
 
   // Create Dungeon Floors
   console.log('Creating dungeon floors...');
-  
+
   const goblinCaveFloor1 = await prisma.dungeonFloor.create({
     data: {
       dungeonId: goblinCave.id,
@@ -271,7 +271,7 @@ async function main() {
 
   // Create Dungeon Floor Mobs
   console.log('Creating dungeon floor mobs...');
-  
+
   await prisma.dungeonFloorMob.create({
     data: {
       dungeonFloorId: goblinCaveFloor1.id,
@@ -314,7 +314,7 @@ async function main() {
 
   // Create Lootboxes
   console.log('Creating lootboxes...');
-  
+
   const goblinLoot = await prisma.lootbox.create({
     data: {
       mobId: goblin.id,
@@ -338,7 +338,7 @@ async function main() {
 
   // Create Lootbox Items
   console.log('Creating lootbox items...');
-  
+
   await prisma.lootboxItem.create({
     data: {
       lootboxId: goblinLoot.id,
@@ -401,11 +401,12 @@ async function main() {
 
   // Create Quest Definitions
   console.log('Creating quest definitions...');
-  
+
   const killGoblinsQuest = await prisma.questDefinition.create({
     data: {
       name: 'Defeat the Goblins',
-      description: 'The village is being attacked by goblins. Defeat 5 of them.',
+      description:
+        'The village is being attacked by goblins. Defeat 5 of them.',
       minimumLevel: 1,
     },
   });
@@ -421,14 +422,15 @@ async function main() {
   const defeatDragonQuest = await prisma.questDefinition.create({
     data: {
       name: 'Slay the Dragon',
-      description: 'The kingdom is in peril. Defeat the Ancient Dragon in its lair.',
+      description:
+        'The kingdom is in peril. Defeat the Ancient Dragon in its lair.',
       minimumLevel: 8,
     },
   });
 
   // Create Quest Rewards
   console.log('Creating quest rewards...');
-  
+
   await prisma.questReward.create({
     data: {
       questDefinitionId: killGoblinsQuest.id,
@@ -482,7 +484,7 @@ async function main() {
 
   // Create a sample player
   console.log('Creating sample player...');
-  
+
   const player = await prisma.player.create({
     data: {
       userId: 'player_1',
@@ -497,7 +499,7 @@ async function main() {
 
   // Add inventory items to player
   console.log('Adding inventory items to player...');
-  
+
   await prisma.inventoryItem.create({
     data: {
       playerId: player.id,
@@ -524,7 +526,7 @@ async function main() {
 
   // Add profession progress to player
   console.log('Adding profession progress to player...');
-  
+
   await prisma.professionProgress.create({
     data: {
       playerId: player.id,
@@ -545,7 +547,7 @@ async function main() {
 
   // Add quests to player
   console.log('Adding quests to player...');
-  
+
   await prisma.quest.create({
     data: {
       playerId: player.id,
@@ -568,7 +570,7 @@ async function main() {
 
   // Add dungeon progress
   console.log('Adding dungeon progress to player...');
-  
+
   await prisma.dungeonProgress.create({
     data: {
       playerId: player.id,
@@ -583,7 +585,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error(e);
     process.exit(1);
   })

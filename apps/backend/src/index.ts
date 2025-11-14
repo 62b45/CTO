@@ -3,11 +3,14 @@ import path from 'path';
 import type { Express } from 'express';
 import { createApp } from './http/app';
 import { FileCooldownRepository } from './storage/cooldownRepository';
+import { FileProgressionRepository } from './storage/progressionRepository';
 import { ActionCooldownService } from './cooldowns/service';
+import { PlayerProgressionService } from './progression/service';
 
 export interface ServerConfig {
   port?: number;
   databaseFile?: string;
+  progressionDatabaseFile?: string;
 }
 
 export interface BuiltServer {
@@ -18,12 +21,25 @@ export interface BuiltServer {
 export function buildServer(config: ServerConfig = {}): BuiltServer {
   const port = config.port ?? Number(process.env.PORT ?? 3001);
   const databaseFile = path.resolve(
-    config.databaseFile ?? process.env.COOLDOWN_DB_PATH ?? path.join(process.cwd(), 'data', 'cooldowns.json'),
+    config.databaseFile ??
+      process.env.COOLDOWN_DB_PATH ??
+      path.join(process.cwd(), 'data', 'cooldowns.json')
+  );
+  const progressionDatabaseFile = path.resolve(
+    config.progressionDatabaseFile ??
+      process.env.PROGRESSION_DB_PATH ??
+      path.join(process.cwd(), 'data', 'progression.json')
   );
 
   const repository = new FileCooldownRepository(databaseFile);
+  const progressionRepository = new FileProgressionRepository(
+    progressionDatabaseFile
+  );
   const service = new ActionCooldownService(repository);
-  const app = createApp({ service });
+  const progressionService = new PlayerProgressionService(
+    progressionRepository
+  );
+  const app = createApp({ service, progressionService });
 
   return {
     app,
@@ -44,4 +60,9 @@ if (require.main === module) {
   main();
 }
 
-export { ActionCooldownService, FileCooldownRepository };
+export {
+  ActionCooldownService,
+  FileCooldownRepository,
+  PlayerProgressionService,
+  FileProgressionRepository,
+};

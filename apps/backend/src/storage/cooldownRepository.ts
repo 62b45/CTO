@@ -10,7 +10,11 @@ export interface CooldownEntry {
 
 export interface CooldownRepository {
   get(playerId: string, action: ActionType): Promise<CooldownEntry | null>;
-  set(playerId: string, action: ActionType, entry: CooldownEntry): Promise<void>;
+  set(
+    playerId: string,
+    action: ActionType,
+    entry: CooldownEntry
+  ): Promise<void>;
 }
 
 interface PersistedTable {
@@ -49,15 +53,26 @@ export class FileCooldownRepository implements CooldownRepository {
       return;
     }
 
-    await fs.writeFile(this.filePath, JSON.stringify(this.table, null, 2), 'utf8');
+    await fs.writeFile(
+      this.filePath,
+      JSON.stringify(this.table, null, 2),
+      'utf8'
+    );
   }
 
-  async get(playerId: string, action: ActionType): Promise<CooldownEntry | null> {
+  async get(
+    playerId: string,
+    action: ActionType
+  ): Promise<CooldownEntry | null> {
     const table = await this.ensureLoaded();
     return table[playerId]?.[action] ?? null;
   }
 
-  async set(playerId: string, action: ActionType, entry: CooldownEntry): Promise<void> {
+  async set(
+    playerId: string,
+    action: ActionType,
+    entry: CooldownEntry
+  ): Promise<void> {
     const table = await this.ensureLoaded();
     table[playerId] = table[playerId] ?? {};
     table[playerId]![action] = entry;

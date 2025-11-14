@@ -27,7 +27,9 @@ export interface ActionResult {
   experience?: number;
 }
 
-export type ActionHandler = (playerId: string) => Promise<ActionResult> | ActionResult;
+export type ActionHandler = (
+  playerId: string
+) => Promise<ActionResult> | ActionResult;
 
 export const ACTION_METADATA: Record<ActionType, ActionMetadata> = {
   hunt: {

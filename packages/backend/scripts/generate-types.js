@@ -6,7 +6,12 @@ const { execSync } = require('child_process');
 
 const backendDir = path.join(__dirname, '..');
 const sharedDir = path.join(backendDir, '..', 'shared');
-const prismaClientDir = path.join(backendDir, 'node_modules', '.prisma', 'client');
+const prismaClientDir = path.join(
+  backendDir,
+  'node_modules',
+  '.prisma',
+  'client'
+);
 const sharedIndexFile = path.join(sharedDir, 'index.ts');
 
 try {
@@ -19,12 +24,15 @@ try {
 
   // Check if Prisma types exist
   const prismaTypesFile = path.join(prismaClientDir, 'index.d.ts');
-  
+
   if (!fs.existsSync(prismaTypesFile)) {
     console.log('Prisma client types not yet generated. Skipping export.');
     // Create an empty index file if it doesn't exist
     if (!fs.existsSync(sharedIndexFile)) {
-      fs.writeFileSync(sharedIndexFile, '// Shared types will be generated here\n');
+      fs.writeFileSync(
+        sharedIndexFile,
+        '// Shared types will be generated here\n'
+      );
     }
     process.exit(0);
   }
@@ -64,7 +72,7 @@ export type {
 `;
 
   fs.writeFileSync(sharedIndexFile, typeExports);
-  
+
   console.log('✓ Types exported to shared package');
   process.exit(0);
 } catch (error) {

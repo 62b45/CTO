@@ -21,7 +21,8 @@ export function AboutPage() {
                 ✓
               </span>
               <div>
-                <strong>React 18</strong> - Modern React with hooks and concurrent features
+                <strong>React 18</strong> - Modern React with hooks and
+                concurrent features
               </div>
             </li>
             <li className="flex items-start">
@@ -45,7 +46,8 @@ export function AboutPage() {
                 ✓
               </span>
               <div>
-                <strong>TailwindCSS</strong> - Utility-first CSS framework with custom theme
+                <strong>TailwindCSS</strong> - Utility-first CSS framework with
+                custom theme
               </div>
             </li>
             <li className="flex items-start">
@@ -77,7 +79,8 @@ export function AboutPage() {
                 ✓
               </span>
               <div>
-                <strong>PWA Support</strong> - Offline capability and installable app
+                <strong>PWA Support</strong> - Offline capability and
+                installable app
               </div>
             </li>
           </ul>
