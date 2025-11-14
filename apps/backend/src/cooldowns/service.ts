@@ -109,4 +109,13 @@ export class ActionCooldownService {
       result,
     };
   }
+
+  async clearCooldown(playerId: string, action: ActionType): Promise<void> {
+    await this.repository.delete(playerId, action);
+    this.logger.info(
+      `Cooldown cleared for player %s, action %s`,
+      playerId,
+      action
+    );
+  }
 }
