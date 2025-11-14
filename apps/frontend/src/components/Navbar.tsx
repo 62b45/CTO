@@ -53,6 +53,12 @@ export function Navbar() {
               Home
             </Link>
             <Link
+              to="/dashboard"
+              className="text-gray-700 dark:text-gray-200 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Dashboard
+            </Link>
+            <Link
               to="/about"
               className="text-gray-700 dark:text-gray-200 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
             >

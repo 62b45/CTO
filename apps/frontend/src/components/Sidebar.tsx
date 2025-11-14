@@ -2,7 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAppStore } from '../state/store';
 
 const navigation = [
-  { name: 'Dashboard', to: '/' },
+  { name: 'Home', to: '/' },
+  { name: 'Dashboard', to: '/dashboard' },
   { name: 'About', to: '/about' },
   { name: 'Settings', to: '/settings' },
 ];
