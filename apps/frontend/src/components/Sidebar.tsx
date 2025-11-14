@@ -4,6 +4,8 @@ import { useAppStore } from '../state/store';
 const navigation = [
   { name: 'Home', to: '/' },
   { name: 'Dashboard', to: '/dashboard' },
+  { name: 'Inventory', to: '/inventory' },
+  { name: 'Crafting', to: '/crafting' },
   { name: 'About', to: '/about' },
   { name: 'Settings', to: '/settings' },
 ];

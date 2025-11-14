@@ -4,6 +4,8 @@ import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
 import { AboutPage } from './pages/About';
 import { SettingsPage } from './pages/Settings';
+import { InventoryPage } from './pages/Inventory';
+import { CraftingPage } from './pages/Crafting';
 
 export function App() {
   return (
@@ -11,6 +13,8 @@ export function App() {
       <Route path="/" element={<RootLayout />}>
         <Route index element={<HomePage />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="inventory" element={<InventoryPage />} />
+        <Route path="crafting" element={<CraftingPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
