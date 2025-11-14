@@ -1,13 +1,13 @@
 // Re-exported Prisma types from @prisma/client
 export * from '@prisma/client';
 
-// Enum type definitions for TypeScript
-export enum ProfessionType {
-  FISHING = 'FISHING',
-  COOKING = 'COOKING',
-  CRAFTING = 'CRAFTING',
-  SMITHING = 'SMITHING',
-  ALCHEMY = 'ALCHEMY',
+// Enum type definitions for TypeScript (matching Prisma schema)
+export enum ItemType {
+  WEAPON = 'WEAPON',
+  ARMOR = 'ARMOR',
+  ACCESSORY = 'ACCESSORY',
+  CONSUMABLE = 'CONSUMABLE',
+  MATERIAL = 'MATERIAL',
 }
 
 export enum ItemRarity {
@@ -18,13 +18,37 @@ export enum ItemRarity {
   LEGENDARY = 'LEGENDARY',
 }
 
-export enum ItemType {
-  WEAPON = 'WEAPON',
-  ARMOR = 'ARMOR',
-  CONSUMABLE = 'CONSUMABLE',
-  QUEST_ITEM = 'QUEST_ITEM',
-  INGREDIENT = 'INGREDIENT',
-  LOOT = 'LOOT',
+export enum Area {
+  GREENWOOD = 'GREENWOOD',
+  ASHEN_WASTE = 'ASHEN_WASTE',
+  CRYSTAL_DEPTHS = 'CRYSTAL_DEPTHS',
+  STORM_PEAKS = 'STORM_PEAKS',
+  VOID_RIFT = 'VOID_RIFT',
+}
+
+export enum Profession {
+  WORKER = 'WORKER',
+  CRAFTER = 'CRAFTER',
+  ENCHANTER = 'ENCHANTER',
+  MERCHANT = 'MERCHANT',
+  LOOTBOXER = 'LOOTBOXER',
+}
+
+export enum EventType {
+  WORLD_BOSS = 'WORLD_BOSS',
+  FESTIVAL = 'FESTIVAL',
+  DOUBLE_LOOT = 'DOUBLE_LOOT',
+  RIFT_INVASION = 'RIFT_INVASION',
+  TRIALS = 'TRIALS',
+}
+
+// Legacy enums from old schema (kept for backward compatibility)
+export enum ProfessionType {
+  FISHING = 'FISHING',
+  COOKING = 'COOKING',
+  CRAFTING = 'CRAFTING',
+  SMITHING = 'SMITHING',
+  ALCHEMY = 'ALCHEMY',
 }
 
 export enum MobType {

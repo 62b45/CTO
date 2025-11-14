@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite doesn't support native enums or JSON types
+// Enums are represented as String fields with validation in the application layer
+// JSON fields are stored as String and parsed in the application layer
+
+model Player {
+  id           String   @id @default(cuid())
+  name         String
+  level        Int      @default(1)
+  xp           Int      @default(0)
+  coins        Int      @default(0)
+  gems         Int      @default(0)
+  atk_base     Int      @default(10)
+  def_base     Int      @default(10)
+  hp_max       Int      @default(100)
+  hp_current   Int      @default(100)
+  equipped     String   @default("{}")
+  inventory    String   @default("[]")
+  professions  String   @default("{}")
+  cooldowns    String   @default("{}")
+  area         String   @default("GREENWOOD")
+  progress     String   @default("{}")
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  cooldownEntries   Cooldown[]
+  professionEntries ProfessionProgress[]
+  inventoryItems    InventoryItem[]
+}
+
+model ItemDefinition {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  type          String   // ItemType: WEAPON, ARMOR, ACCESSORY, CONSUMABLE, MATERIAL
+  rarity        String   @default("COMMON") // ItemRarity: COMMON, UNCOMMON, RARE, EPIC, LEGENDARY
+  power         Int      @default(0)
+  bonuses       String   @default("{}")
+  durability    Int?
+  level_req     Int      @default(1)
+  buy_value     Int      @default(0)
+  sell_value    Int      @default(0)
+  drop_weight   Int      @default(1)
+
+  inventoryItems InventoryItem[]
+}
+
+model Mob {
+  id         String   @id @default(cuid())
+  name       String
+  area       String   // Area: GREENWOOD, ASHEN_WASTE, CRYSTAL_DEPTHS, STORM_PEAKS, VOID_RIFT
+  hp         Int
+  atk        Int
+  def        Int
+  xp         Int
+  coins      Int
+  drops      String   @default("[]")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  bosses Boss[]
+}
+
+model Boss {
+  id      String  @id @default(cuid())
+  name    String
+  area    String  // Area: GREENWOOD, ASHEN_WASTE, CRYSTAL_DEPTHS, STORM_PEAKS, VOID_RIFT
+  hp      Int
+  atk     Int
+  def     Int
+  phases  String  @default("[]")
+  drops   String  @default("[]")
+  mobId   String?
+
+  mob      Mob?      @relation(fields: [mobId], references: [id])
+  dungeons Dungeon[]
+}
+
+model Dungeon {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  area       String   // Area: GREENWOOD, ASHEN_WASTE, CRYSTAL_DEPTHS, STORM_PEAKS, VOID_RIFT
+  floors     String   @default("[]")
+  bossId     String?
+  unlockReq  String   @default("{}")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  boss Boss? @relation(fields: [bossId], references: [id])
+}
+
+model Quest {
+  id           String   @id @default(cuid())
+  name         String
+  description  String
+  requirements String   @default("{}")
+  rewards      String   @default("{}")
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
+
+model Lootbox {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  cost          Int      @default(0)
+  dropTable     String   @default("[]")
+  rarity        String   @default("COMMON") // ItemRarity: COMMON, UNCOMMON, RARE, EPIC, LEGENDARY
+  pityThreshold Int      @default(0)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model Cooldown {
+  id         String   @id @default(cuid())
+  playerId   String
+  action     String
+  lastUsedAt DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, action])
+}
+
+model ProfessionProgress {
+  id         String   @id @default(cuid())
+  playerId   String
+  profession String   // Profession: WORKER, CRAFTER, ENCHANTER, MERCHANT, LOOTBOXER
+  level      Int      @default(1)
+  xp         Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, profession])
+}
+
+model EventState {
+  id        String    @id @default(cuid())
+  active    Boolean   @default(false)
+  type      String    // EventType: WORLD_BOSS, FESTIVAL, DOUBLE_LOOT, RIFT_INVASION, TRIALS
+  modifiers String    @default("{}")
+  startedAt DateTime  @default(now())
+  endsAt    DateTime?
+}
+
+model InventoryItem {
+  id               String   @id @default(cuid())
+  playerId         String
+  itemDefinitionId String
+  quantity         Int      @default(1)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  player         Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  itemDefinition ItemDefinition @relation(fields: [itemDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, itemDefinitionId])
+}
