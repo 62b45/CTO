@@ -269,6 +269,49 @@ export function createApp({
     }
   );
 
+  app.get(
+    '/players/:playerId/cooldowns',
+    async (req: Request<{ playerId: string }>, res: Response) => {
+      const { playerId } = req.params;
+      const now = Date.now();
+      
+      const cooldowns = await service.repository.getAll(playerId);
+      const cooldownData = ACTION_TYPES.map(action => {
+        const cooldown = cooldowns[action];
+        const metadata = ACTION_METADATA[action];
+        
+        if (!cooldown) {
+          return {
+            action,
+            metadata,
+            cooldown: null,
+            isActive: false,
+          };
+        }
+        
+        const remainingMs = Math.max(0, cooldown.availableAt - now);
+        return {
+          action,
+          metadata,
+          cooldown: {
+            lastTriggeredAt: formatDate(cooldown.lastTriggeredAt),
+            availableAt: formatDate(cooldown.availableAt),
+            remainingMs,
+          },
+          isActive: remainingMs > 0,
+        };
+      });
+      
+      res.json({
+        success: true,
+        data: {
+          playerId,
+          cooldowns: cooldownData,
+        },
+      });
+    }
+  );
+
   app.post(
     '/players/:playerId/actions/:action',
     async (
@@ -349,6 +392,36 @@ export function createApp({
       }
     }
   );
+
+  if (saveService) {
+    app.get(
+      '/players/:playerId/activity',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        const { playerId } = req.params;
+        const limit = req.query.limit
+          ? Math.min(Number.parseInt(req.query.limit as string, 10), 100)
+          : 20;
+        
+        const snapshots = saveService.getSnapshots(playerId);
+        const recentActivity = snapshots
+          .slice(-limit)
+          .reverse()
+          .map(snapshot => ({
+            action: snapshot.action ?? 'unknown',
+            timestamp: snapshot.timestamp.toISOString(),
+            data: snapshot.data,
+          }));
+        
+        res.json({
+          success: true,
+          data: {
+            playerId,
+            activity: recentActivity,
+          },
+        });
+      }
+    );
+  }
 
   if (progressionService) {
     app.get(
