@@ -173,4 +173,16 @@ export class ProfessionService {
     }
     return Math.min(100, (professionLevel.currentXp / nextLevelXp) * 100);
   }
+
+  async updateProfession(
+    playerId: string,
+    profession: ProfessionType,
+    professionLevel: ProfessionLevel
+  ): Promise<PlayerProfessions> {
+    const professions = await this.getOrCreateProfessions(playerId);
+    professions.professions[profession] = professionLevel;
+    professions.updatedAt = new Date(this.clock());
+    await this.repository.set(playerId, professions);
+    return professions;
+  }
 }

@@ -19,6 +19,8 @@ import { EventService } from './events/service';
 import { SaveService } from './save/service';
 import { PlayerStateService } from './save/playerStateService';
 import { AdminService } from './admin/service';
+import { CraftingService } from './crafting/service';
+import { EquipmentService } from './equipment/service';
 
 export interface ServerConfig {
   port?: number;
@@ -120,6 +122,15 @@ export function buildServer(config: ServerConfig = {}): BuiltServer {
     cooldownService: service,
     eventService,
   });
+  const craftingService = new CraftingService(
+    professionService,
+    economyService,
+    inventoryRepository
+  );
+  const equipmentService = new EquipmentService(
+    economyService,
+    inventoryRepository
+  );
 
   const app = createApp({
     service,
@@ -133,6 +144,8 @@ export function buildServer(config: ServerConfig = {}): BuiltServer {
     saveService,
     playerStateService,
     adminService,
+    craftingService,
+    equipmentService,
   });
 
   return {
@@ -172,4 +185,6 @@ export {
   SaveService,
   PlayerStateService,
   AdminService,
+  CraftingService,
+  EquipmentService,
 };

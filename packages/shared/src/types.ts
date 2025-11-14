@@ -358,3 +358,66 @@ export interface PlayerArenaState {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export enum EquipmentSlot {
+  WEAPON = 'WEAPON',
+  ARMOR = 'ARMOR',
+  ACCESSORY_1 = 'ACCESSORY_1',
+  ACCESSORY_2 = 'ACCESSORY_2',
+  ACCESSORY_3 = 'ACCESSORY_3',
+}
+
+export interface EquippedItem {
+  slot: EquipmentSlot;
+  itemId: string;
+  name: string;
+  durability?: number;
+  maxDurability?: number;
+  bonuses: Record<string, number>;
+}
+
+export interface PlayerEquipment {
+  playerId: string;
+  equipped: Record<EquipmentSlot, EquippedItem | null>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ItemDefinitionData {
+  id: string;
+  name: string;
+  type: string;
+  rarity: string;
+  power: number;
+  bonuses: Record<string, number>;
+  durability?: number;
+  level_req: number;
+  buy_value: number;
+  sell_value: number;
+  drop_weight: number;
+}
+
+export interface CraftingRecipe {
+  id: string;
+  name: string;
+  resultItemId: string;
+  resultItemName: string;
+  profession: ProfessionType;
+  minLevel: number;
+  materials: Array<{
+    itemId: string;
+    itemName: string;
+    quantity: number;
+  }>;
+  baseSuccessChance: number;
+  experience: number;
+}
+
+export interface CraftingResult {
+  success: boolean;
+  itemId: string;
+  itemName: string;
+  experienceGained: number;
+  professionLevelUp?: number;
+  message: string;
+}

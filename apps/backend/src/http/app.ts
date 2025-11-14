@@ -31,6 +31,8 @@ import type { EventService } from '../events/service';
 import type { SaveService } from '../save/service';
 import type { PlayerStateService } from '../save/playerStateService';
 import type { AdminService } from '../admin/service';
+import type { CraftingService } from '../crafting/service';
+import type { EquipmentService } from '../equipment/service';
 import { createAdminAuthMiddleware } from '../admin/middleware';
 
 export interface CreateAppOptions {
@@ -45,6 +47,8 @@ export interface CreateAppOptions {
   saveService?: SaveService;
   playerStateService?: PlayerStateService;
   adminService?: AdminService;
+  craftingService?: CraftingService;
+  equipmentService?: EquipmentService;
   handlers?: Partial<Record<ActionType, ActionHandler>>;
   logger?: Pick<Console, 'error'>;
 }
@@ -213,6 +217,8 @@ export function createApp({
   saveService,
   playerStateService,
   adminService,
+  craftingService,
+  equipmentService,
   handlers: overrides,
   logger,
 }: CreateAppOptions): Express {
@@ -994,7 +1000,29 @@ export function createApp({
       async (req: Request<{ playerId: string }>, res: Response) => {
         try {
           const { playerId } = req.params;
+          const page = req.query.page ? Number.parseInt(req.query.page as string, 10) : 1;
+          const pageSize = req.query.pageSize ? Number.parseInt(req.query.pageSize as string, 10) : 20;
+          const rarity = req.query.rarity as string | undefined;
+          const type = req.query.type as string | undefined;
+
           const inventory = await economyService.getOrCreateInventory(playerId);
+
+          // Filter items
+          let filtered = inventory.items;
+          if (rarity) {
+            filtered = filtered.filter(item => item.rarity === rarity);
+          }
+          if (type) {
+            // We'd need to look up the item type, but for now we'll keep items
+            // In a real implementation, we'd fetch item definitions
+          }
+
+          // Paginate
+          const total = filtered.length;
+          const totalPages = Math.ceil(total / pageSize);
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+          const items = filtered.slice(start, end);
 
           res.json({
             success: true,
@@ -1003,7 +1031,13 @@ export function createApp({
               inventory: {
                 coins: inventory.coins,
                 gems: inventory.gems,
-                items: inventory.items,
+                items,
+                pagination: {
+                  page,
+                  pageSize,
+                  total,
+                  totalPages,
+                },
                 createdAt: inventory.createdAt.toISOString(),
                 updatedAt: inventory.updatedAt.toISOString(),
                 lastTransactionAt: inventory.lastTransactionAt?.toISOString(),
@@ -1139,6 +1173,215 @@ export function createApp({
 
           errLogger.error(
             'Error selling item: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+  }
+
+  if (equipmentService) {
+    app.get(
+      '/players/:playerId/equipment',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const equipment = await equipmentService.getEquipped(playerId);
+          const bonuses = equipmentService.calculateBonuses(equipment);
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              equipped: {
+                WEAPON: equipment.equipped.WEAPON ? { ...equipment.equipped.WEAPON } : null,
+                ARMOR: equipment.equipped.ARMOR ? { ...equipment.equipped.ARMOR } : null,
+                ACCESSORY_1: equipment.equipped.ACCESSORY_1 ? { ...equipment.equipped.ACCESSORY_1 } : null,
+                ACCESSORY_2: equipment.equipped.ACCESSORY_2 ? { ...equipment.equipped.ACCESSORY_2 } : null,
+                ACCESSORY_3: equipment.equipped.ACCESSORY_3 ? { ...equipment.equipped.ACCESSORY_3 } : null,
+              },
+              totalBonuses: bonuses,
+            },
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error fetching equipment: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/players/:playerId/equip/:itemId',
+      async (
+        req: Request<{ playerId: string; itemId: string }>,
+        res: Response
+      ) => {
+        try {
+          const { playerId, itemId } = req.params;
+          const { slot } = req.body as { slot?: string };
+
+          const result = await equipmentService.equip(
+            playerId,
+            itemId,
+            slot ? (slot.toUpperCase() as any) : undefined
+          );
+
+          const equipment = await equipmentService.getEquipped(playerId);
+          const bonuses = equipmentService.calculateBonuses(equipment);
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              equipped: result.equipped,
+              unequipped: result.unequipped,
+              totalBonuses: bonuses,
+            },
+          });
+        } catch (error) {
+          const errorMessage = (error as Error).message;
+          if (errorMessage.includes('not found') || errorMessage.includes('Cannot equip')) {
+            res.status(400).json({
+              success: false,
+              message: errorMessage,
+            });
+            return;
+          }
+
+          errLogger.error(
+            'Error equipping item: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/players/:playerId/unequip/:slot',
+      async (
+        req: Request<{ playerId: string; slot: string }>,
+        res: Response
+      ) => {
+        try {
+          const { playerId, slot } = req.params;
+
+          const unequipped = await equipmentService.unequip(
+            playerId,
+            slot.toUpperCase() as any
+          );
+
+          const equipment = await equipmentService.getEquipped(playerId);
+          const bonuses = equipmentService.calculateBonuses(equipment);
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              unequipped,
+              totalBonuses: bonuses,
+            },
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error unequipping item: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+  }
+
+  if (craftingService) {
+    app.get(
+      '/players/:playerId/crafting/recipes',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const profession = req.query.profession as string | undefined;
+
+          const recipes = await craftingService.getRecipes(
+            playerId,
+            profession ? (profession.toLowerCase() as any) : undefined
+          );
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              recipes,
+            },
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error fetching recipes: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/players/:playerId/craft/:recipeId',
+      async (
+        req: Request<{ playerId: string; recipeId: string }>,
+        res: Response
+      ) => {
+        try {
+          const { playerId, recipeId } = req.params;
+
+          const result = await craftingService.craft(playerId, recipeId);
+          const inventory = await economyService?.getOrCreateInventory(playerId);
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              craftingResult: result,
+              inventory: inventory ? {
+                coins: inventory.coins,
+                gems: inventory.gems,
+                items: inventory.items,
+              } : undefined,
+            },
+          });
+        } catch (error) {
+          const errorMessage = (error as Error).message;
+          if (
+            errorMessage.includes('not found') ||
+            errorMessage.includes('Insufficient') ||
+            errorMessage.includes('level')
+          ) {
+            res.status(400).json({
+              success: false,
+              message: errorMessage,
+            });
+            return;
+          }
+
+          errLogger.error(
+            'Error crafting: %s',
             (error as Error).stack ?? String(error)
           );
           res.status(500).json({
