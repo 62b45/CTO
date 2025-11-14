@@ -47,7 +47,7 @@ describe('ActionCooldownService', () => {
         playerId: 'player-2',
         action: 'arena',
         handler: () => ({ summary: 'Another arena attempt.' }),
-      }),
+      })
     ).rejects.toMatchObject({
       name: 'CooldownActiveError',
       remainingMs: ACTION_METADATA.arena.cooldownMs,
@@ -68,7 +68,7 @@ describe('ActionCooldownService', () => {
         playerId: 'player-3',
         action: 'heal',
         handler: () => ({ summary: 'Healing again.' }),
-      }),
+      })
     ).resolves.toMatchObject({
       playerId: 'player-3',
       action: 'heal',
@@ -89,7 +89,9 @@ describe('Action cooldown HTTP endpoints', () => {
 
   it('returns 429 with remaining cooldown when triggered too soon', async () => {
     const repository = new InMemoryCooldownRepository();
-    const service = new ActionCooldownService(repository, noopLogger, () => Date.now());
+    const service = new ActionCooldownService(repository, noopLogger, () =>
+      Date.now()
+    );
     const app = createApp({
       service,
       handlers: {
@@ -101,15 +103,21 @@ describe('Action cooldown HTTP endpoints', () => {
 
     await agent.post('/players/player-10/actions/hunt').expect(200);
 
-    const response = await agent.post('/players/player-10/actions/hunt').expect(429);
+    const response = await agent
+      .post('/players/player-10/actions/hunt')
+      .expect(429);
     expect(response.body.success).toBe(false);
-    expect(response.body.cooldown.remainingMs).toBe(ACTION_METADATA.hunt.cooldownMs);
+    expect(response.body.cooldown.remainingMs).toBe(
+      ACTION_METADATA.hunt.cooldownMs
+    );
     expect(response.body.cooldown.availableAt).toBeDefined();
   });
 
   it('exposes current cooldown information via GET endpoint', async () => {
     const repository = new InMemoryCooldownRepository();
-    const service = new ActionCooldownService(repository, noopLogger, () => Date.now());
+    const service = new ActionCooldownService(repository, noopLogger, () =>
+      Date.now()
+    );
     const app = createApp({ service });
 
     const agent = request(app);
@@ -120,6 +128,8 @@ describe('Action cooldown HTTP endpoints', () => {
       .expect(200);
 
     expect(cooldownResponse.body.success).toBe(true);
-    expect(cooldownResponse.body.data.cooldown.remainingMs).toBe(ACTION_METADATA.heal.cooldownMs);
+    expect(cooldownResponse.body.data.cooldown.remainingMs).toBe(
+      ACTION_METADATA.heal.cooldownMs
+    );
   });
 });

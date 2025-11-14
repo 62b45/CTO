@@ -8,8 +8,8 @@ export function SettingsPage() {
     const { name, value } = event.target;
     const nextUser = {
       id: user?.id ?? '1',
-      name: name === 'name' ? value : user?.name ?? '',
-      email: name === 'email' ? value : user?.email ?? '',
+      name: name === 'name' ? value : (user?.name ?? ''),
+      email: name === 'email' ? value : (user?.email ?? ''),
     };
     setUser(nextUser);
   };
@@ -44,7 +44,7 @@ export function SettingsPage() {
           </h2>
           <form
             className="mt-4 space-y-4"
-            onSubmit={(event) => event.preventDefault()}
+            onSubmit={event => event.preventDefault()}
           >
             <div>
               <label

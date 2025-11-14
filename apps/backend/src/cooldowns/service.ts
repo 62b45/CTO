@@ -1,6 +1,14 @@
-import type { ActionHandler, ActionMetadata, ActionResult, ActionType } from '../actions/metadata';
+import type {
+  ActionHandler,
+  ActionMetadata,
+  ActionResult,
+  ActionType,
+} from '../actions/metadata';
 import { ACTION_METADATA } from '../actions/metadata';
-import type { CooldownRepository, CooldownEntry } from '../storage/cooldownRepository';
+import type {
+  CooldownRepository,
+  CooldownEntry,
+} from '../storage/cooldownRepository';
 import { CooldownActiveError } from './errors';
 
 export interface TriggerPayload {
@@ -32,10 +40,13 @@ export class ActionCooldownService {
   constructor(
     private readonly repository: CooldownRepository,
     private readonly logger: Logger = console,
-    private readonly clock: Clock = () => Date.now(),
+    private readonly clock: Clock = () => Date.now()
   ) {}
 
-  async getCooldown(playerId: string, action: ActionType): Promise<CooldownSnapshot | null> {
+  async getCooldown(
+    playerId: string,
+    action: ActionType
+  ): Promise<CooldownSnapshot | null> {
     const entry = await this.repository.get(playerId, action);
     if (!entry) {
       return null;
@@ -49,7 +60,11 @@ export class ActionCooldownService {
     };
   }
 
-  async trigger({ playerId, action, handler }: TriggerPayload): Promise<TriggerOutcome> {
+  async trigger({
+    playerId,
+    action,
+    handler,
+  }: TriggerPayload): Promise<TriggerOutcome> {
     const metadata = ACTION_METADATA[action];
     const now = this.clock();
 
@@ -60,12 +75,13 @@ export class ActionCooldownService {
         `Rejected action %s for player %s. Remaining cooldown: %d ms`,
         action,
         playerId,
-        remainingMs,
+        remainingMs
       );
       throw new CooldownActiveError(action, remainingMs, entry.availableAt);
     }
 
-    const handlerToUse: ActionHandler = handler ?? (() => ({ summary: 'Action executed.' }));
+    const handlerToUse: ActionHandler =
+      handler ?? (() => ({ summary: 'Action executed.' }));
     const result = await handlerToUse(playerId);
 
     const availableAt = now + metadata.cooldownMs;
@@ -81,7 +97,7 @@ export class ActionCooldownService {
       `Action %s executed for player %s. Cooldown until %d (ms)`,
       action,
       playerId,
-      availableAt,
+      availableAt
     );
 
     return {

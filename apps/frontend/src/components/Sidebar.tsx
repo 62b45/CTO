@@ -19,7 +19,7 @@ export function Sidebar() {
     >
       <div className="p-4">
         <nav className="space-y-1">
-          {navigation.map((item) => {
+          {navigation.map(item => {
             const isActive = location.pathname === item.to;
             return (
               <Link

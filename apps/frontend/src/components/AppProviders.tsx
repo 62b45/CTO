@@ -10,7 +10,7 @@ type AppProvidersProps = {
 };
 
 export function AppProviders({ children }: AppProvidersProps) {
-  const theme = useAppStore((state) => state.theme);
+  const theme = useAppStore(state => state.theme);
 
   useEffect(() => {
     const root = document.documentElement;

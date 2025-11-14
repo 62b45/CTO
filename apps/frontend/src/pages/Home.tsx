@@ -27,7 +27,8 @@ export function HomePage() {
           Welcome back
         </h1>
         <p className="mt-2 text-gray-600 dark:text-gray-300">
-          Manage your application state with React Query, Zustand, and React Router.
+          Manage your application state with React Query, Zustand, and React
+          Router.
         </p>
       </header>
 

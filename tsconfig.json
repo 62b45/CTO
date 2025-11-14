@@ -15,18 +15,10 @@
     "outDir": "./dist",
     "rootDir": "./",
     "composite": true,
-    "strict": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node"
-  }
-    "rootDir": "./src",
     "removeComments": false,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
     "noUncheckedIndexedAccess": true,
@@ -36,6 +28,6 @@
       "@shared/*": ["./packages/shared/src/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["apps/**/*", "packages/**/*"],
+  "exclude": ["node_modules", "dist", "**/node_modules", "**/dist"]
 }

@@ -17,21 +17,21 @@ export interface AppState {
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    set => ({
       theme: 'light',
       sidebarOpen: true,
       user: null,
       toggleTheme: () =>
-        set((state) => ({
+        set(state => ({
           theme: state.theme === 'light' ? 'dark' : 'light',
         })),
-      toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-      setUser: (user) => set({ user }),
+      toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
+      setUser: user => set({ user }),
       clearUser: () => set({ user: null }),
     }),
     {
       name: 'app-storage',
-      partialize: (state) => ({ theme: state.theme, user: state.user }),
+      partialize: state => ({ theme: state.theme, user: state.user }),
     }
   )
 );

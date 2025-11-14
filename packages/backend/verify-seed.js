@@ -44,14 +44,16 @@ async function main() {
   console.log(`  - Name: ${playerData.name}`);
   console.log(`  - Level: ${playerData.level}`);
   console.log(`  - Inventory Items: ${playerData.inventory.length}`);
-  console.log(`  - Profession Progresses: ${playerData.professionProgress.length}`);
+  console.log(
+    `  - Profession Progresses: ${playerData.professionProgress.length}`
+  );
   console.log(`  - Quests: ${playerData.quests.length}`);
 
   console.log('\n✓ All seed data verified successfully!');
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('Error:', e);
     process.exit(1);
   })
