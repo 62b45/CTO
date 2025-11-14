@@ -6,10 +6,14 @@ import { FileCooldownRepository } from './storage/cooldownRepository';
 import { FileProgressionRepository } from './storage/progressionRepository';
 import { FileProfessionsRepository } from './storage/professionsRepository';
 import { FileInventoryRepository } from './storage/inventoryRepository';
+import { FileDungeonRepository } from './storage/dungeonRepository';
+import { FileArenaRepository } from './storage/arenaRepository';
 import { ActionCooldownService } from './cooldowns/service';
 import { PlayerProgressionService } from './progression/service';
 import { ProfessionService } from './professions/service';
 import { EconomyService } from './economy/service';
+import { DungeonService } from './dungeons/service';
+import { ArenaService } from './arena/service';
 
 export interface ServerConfig {
   port?: number;
@@ -17,6 +21,8 @@ export interface ServerConfig {
   progressionDatabaseFile?: string;
   professionsDatabaseFile?: string;
   inventoryDatabaseFile?: string;
+  dungeonDatabaseFile?: string;
+  arenaDatabaseFile?: string;
 }
 
 export interface BuiltServer {
@@ -46,6 +52,16 @@ export function buildServer(config: ServerConfig = {}): BuiltServer {
       process.env.INVENTORY_DB_PATH ??
       path.join(process.cwd(), 'data', 'inventory.json')
   );
+  const dungeonDatabaseFile = path.resolve(
+    config.dungeonDatabaseFile ??
+      process.env.DUNGEON_DB_PATH ??
+      path.join(process.cwd(), 'data', 'dungeons.json')
+  );
+  const arenaDatabaseFile = path.resolve(
+    config.arenaDatabaseFile ??
+      process.env.ARENA_DB_PATH ??
+      path.join(process.cwd(), 'data', 'arena.json')
+  );
 
   const repository = new FileCooldownRepository(databaseFile);
   const progressionRepository = new FileProgressionRepository(
@@ -57,6 +73,8 @@ export function buildServer(config: ServerConfig = {}): BuiltServer {
   const inventoryRepository = new FileInventoryRepository(
     inventoryDatabaseFile
   );
+  const dungeonRepository = new FileDungeonRepository(dungeonDatabaseFile);
+  const arenaRepository = new FileArenaRepository(arenaDatabaseFile);
 
   const service = new ActionCooldownService(repository);
   const progressionService = new PlayerProgressionService(
@@ -67,12 +85,22 @@ export function buildServer(config: ServerConfig = {}): BuiltServer {
     inventoryRepository,
     professionService
   );
+  const dungeonService = new DungeonService(
+    dungeonRepository,
+    progressionService
+  );
+  const arenaService = new ArenaService(
+    arenaRepository,
+    progressionService
+  );
 
   const app = createApp({
     service,
     progressionService,
     professionService,
     economyService,
+    dungeonService,
+    arenaService,
   });
 
   return {
@@ -103,4 +131,8 @@ export {
   FileProfessionsRepository,
   EconomyService,
   FileInventoryRepository,
+  DungeonService,
+  FileDungeonRepository,
+  ArenaService,
+  FileArenaRepository,
 };
