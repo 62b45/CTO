@@ -24,15 +24,15 @@ describe('CombatEngine', () => {
         maxHealth: 100,
         attack: 20,
         defense: 10,
-        speed: 15
+        speed: 15,
       },
       weapon: {
         id: 'sword',
         name: 'Iron Sword',
         baseDamage: 10,
-        multiplier: 1.5
+        multiplier: 1.5,
       },
-      isPlayer: true
+      isPlayer: true,
     };
 
     // Create test enemy
@@ -44,20 +44,20 @@ describe('CombatEngine', () => {
         maxHealth: 80,
         attack: 15,
         defense: 8,
-        speed: 12
+        speed: 12,
       },
       weapon: {
         id: 'dagger',
         name: 'Rusty Dagger',
         baseDamage: 5,
-        multiplier: 1.0
+        multiplier: 1.0,
       },
-      isPlayer: false
+      isPlayer: false,
     };
 
     rewards = {
       experience: 50,
-      gold: 25
+      gold: 25,
     };
   });
 
@@ -94,7 +94,7 @@ describe('CombatEngine', () => {
       expect(result1.winner).toBe(result2.winner);
       expect(result1.turns).toBe(result2.turns);
       expect(result1.logs).toHaveLength(result2.logs.length);
-      
+
       // Check that damage values are the same
       result1.logs.forEach((log, index) => {
         expect(log.action.damage).toBe(result2.logs[index].action.damage);
@@ -112,7 +112,7 @@ describe('CombatEngine', () => {
       // Results should be different
       const damages1 = result1.logs.map(log => log.action.damage);
       const damages2 = result2.logs.map(log => log.action.damage);
-      
+
       expect(damages1).not.toEqual(damages2);
     });
 
@@ -120,7 +120,11 @@ describe('CombatEngine', () => {
       const unarmedPlayer = { ...player, weapon: undefined };
       const unarmedEnemy = { ...enemy, weapon: undefined };
 
-      const result = combatEngine.resolveCombat(unarmedPlayer, unarmedEnemy, rewards);
+      const result = combatEngine.resolveCombat(
+        unarmedPlayer,
+        unarmedEnemy,
+        rewards
+      );
 
       expect(result.winner).toBeDefined();
       expect(result.loser).toBeDefined();
@@ -165,7 +169,7 @@ describe('CombatEngine', () => {
     it('should return logs within specified turn range', () => {
       const allLogs = combatEngine.getLogs();
       const turn1Logs = combatEngine.getLogs(1, 1);
-      
+
       expect(turn1Logs.length).toBeLessThanOrEqual(allLogs.length);
       turn1Logs.forEach(log => {
         expect(log.turn).toBe(1);
@@ -175,7 +179,7 @@ describe('CombatEngine', () => {
     it('should return logs from start turn when only start specified', () => {
       const startTurn = 2;
       const logs = combatEngine.getLogs(startTurn);
-      
+
       logs.forEach(log => {
         expect(log.turn).toBeGreaterThanOrEqual(startTurn);
       });
@@ -184,7 +188,7 @@ describe('CombatEngine', () => {
     it('should return logs up to end turn when only end specified', () => {
       const endTurn = 2;
       const logs = combatEngine.getLogs(undefined, endTurn);
-      
+
       logs.forEach(log => {
         expect(log.turn).toBeLessThanOrEqual(endTurn);
       });

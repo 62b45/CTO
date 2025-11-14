@@ -14,7 +14,7 @@ import {
   calculateDamage,
   generateCombatLogDescription,
   isDefeated,
-  restoreHealth
+  restoreHealth,
 } from '@shared';
 
 export class CombatEngine {
@@ -41,35 +41,44 @@ export class CombatEngine {
     // Create copies of combatants with full health
     const combatants: { [id: string]: Combatant } = {
       [attacker.id]: { ...attacker, stats: restoreHealth(attacker.stats) },
-      [defender.id]: { ...defender, stats: restoreHealth(defender.stats) }
+      [defender.id]: { ...defender, stats: restoreHealth(defender.stats) },
     };
 
     // Determine turn order based on speed
     const turnOrder = this.determineTurnOrder(attacker, defender);
-    
-    let currentAttacker = turnOrder[0];
-    let currentDefender = turnOrder[1];
+
+    const currentAttacker = turnOrder[0];
+    const currentDefender = turnOrder[1];
 
     // Main combat loop
-    while (!isDefeated(combatants[currentAttacker.id].stats) && 
-           !isDefeated(combatants[currentDefender.id].stats)) {
-      
+    while (
+      !isDefeated(combatants[currentAttacker.id].stats) &&
+      !isDefeated(combatants[currentDefender.id].stats)
+    ) {
       // Attacker's turn
-      this.executeTurn(combatants[currentAttacker], combatants[currentDefender]);
-      
+      this.executeTurn(
+        combatants[currentAttacker],
+        combatants[currentDefender]
+      );
+
       // Check if defender is defeated
       if (isDefeated(combatants[currentDefender.id].stats)) {
         break;
       }
 
       // Defender's turn
-      this.executeTurn(combatants[currentDefender], combatants[currentAttacker]);
-      
+      this.executeTurn(
+        combatants[currentDefender],
+        combatants[currentAttacker]
+      );
+
       this.turn++;
     }
 
     // Determine winner
-    const winner = isDefeated(combatants[attacker.id].stats) ? defender.id : attacker.id;
+    const winner = isDefeated(combatants[attacker.id].stats)
+      ? defender.id
+      : attacker.id;
     const loser = winner === attacker.id ? defender.id : attacker.id;
 
     return {
@@ -77,14 +86,17 @@ export class CombatEngine {
       loser,
       turns: this.turn,
       logs: this.logs,
-      rewards
+      rewards,
     };
   }
 
   /**
    * Determine turn order based on speed stats
    */
-  private determineTurnOrder(attacker: Combatant, defender: Combatant): [Combatant, Combatant] {
+  private determineTurnOrder(
+    attacker: Combatant,
+    defender: Combatant
+  ): [Combatant, Combatant] {
     if (attacker.stats.speed >= defender.stats.speed) {
       return [attacker, defender];
     }
@@ -106,11 +118,16 @@ export class CombatEngine {
       turn: this.turn,
       timestamp: new Date(),
       action,
-      description: generateCombatLogDescription(action, attacker.name, defender.name, damage),
+      description: generateCombatLogDescription(
+        action,
+        attacker.name,
+        defender.name,
+        damage
+      ),
       remainingHealth: {
         [attacker.id]: attacker.stats.health,
-        [defender.id]: defender.stats.health
-      }
+        [defender.id]: defender.stats.health,
+      },
     };
 
     this.logs.push(logEntry);
@@ -119,13 +136,19 @@ export class CombatEngine {
   /**
    * Create an attack action with damage calculation
    */
-  private createAttackAction(attacker: Combatant, defender: Combatant): CombatAction {
+  private createAttackAction(
+    attacker: Combatant,
+    defender: Combatant
+  ): CombatAction {
     if (!attacker.weapon) {
       // Unarmed attack
       const baseDamage = attacker.stats.attack;
       const variance = this.rng.nextFloat(0.875, 1.125); // ±12.5%
       const defenseReduction = Math.max(0.1, 1 - defender.stats.defense * 0.01);
-      const damage = Math.max(1, Math.floor(baseDamage * variance * defenseReduction));
+      const damage = Math.max(
+        1,
+        Math.floor(baseDamage * variance * defenseReduction)
+      );
 
       return {
         attackerId: attacker.id,
@@ -133,7 +156,7 @@ export class CombatEngine {
         type: 'attack',
         damage,
         roll: baseDamage,
-        variance
+        variance,
       };
     }
 
@@ -151,7 +174,7 @@ export class CombatEngine {
       type: 'attack',
       damage: damageResult.damage,
       roll: damageResult.roll,
-      variance: damageResult.variance
+      variance: damageResult.variance,
     };
   }
 

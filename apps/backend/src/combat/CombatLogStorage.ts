@@ -24,12 +24,16 @@ export class CombatLogStorage {
   /**
    * Store combat logs for a player
    */
-  storeCombatLogs(playerId: string, logs: CombatLogEntry[], timestamp?: Date): string {
+  storeCombatLogs(
+    playerId: string,
+    logs: CombatLogEntry[],
+    timestamp?: Date
+  ): string {
     const sessionId = this.generateSessionId();
     const session: StoredCombatSession = {
       id: sessionId,
       timestamp: timestamp || new Date(),
-      logs: logs.slice(0, this.maxLogsPerSession) // Limit logs per session
+      logs: logs.slice(0, this.maxLogsPerSession), // Limit logs per session
     };
 
     // Get or create player data
@@ -38,7 +42,7 @@ export class CombatLogStorage {
       playerData = {
         playerId,
         sessions: [],
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
       this.playerData.set(playerId, playerData);
     }
@@ -49,7 +53,10 @@ export class CombatLogStorage {
 
     // Limit number of sessions per player
     if (playerData.sessions.length > this.maxSessionsPerPlayer) {
-      playerData.sessions = playerData.sessions.slice(0, this.maxSessionsPerPlayer);
+      playerData.sessions = playerData.sessions.slice(
+        0,
+        this.maxSessionsPerPlayer
+      );
     }
 
     return sessionId;
@@ -127,13 +134,16 @@ export class CombatLogStorage {
 
     for (const playerData of this.playerData.values()) {
       totalSessions += playerData.sessions.length;
-      totalLogs += playerData.sessions.reduce((sum, session) => sum + session.logs.length, 0);
+      totalLogs += playerData.sessions.reduce(
+        (sum, session) => sum + session.logs.length,
+        0
+      );
     }
 
     return {
       totalPlayers: this.playerData.size,
       totalSessions,
-      totalLogs
+      totalLogs,
     };
   }
 
