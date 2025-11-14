@@ -9,7 +9,7 @@ import {
   EnemyTemplate,
   ApiResponse,
   createSuccessResponse,
-  createErrorResponse
+  createErrorResponse,
 } from '@shared';
 import { CombatService } from '../combat/CombatService';
 
@@ -30,24 +30,20 @@ export class CombatController {
 
       // Validate request
       if (!this.validateSimulationRequest(simulationRequest)) {
-        res.status(400).json(
-          createErrorResponse('Invalid combat simulation request')
-        );
+        res
+          .status(400)
+          .json(createErrorResponse('Invalid combat simulation request'));
         return;
       }
 
       // Simulate combat
-      const result: CombatSimulationResponse = 
+      const result: CombatSimulationResponse =
         this.combatService.simulateCombat(simulationRequest);
 
-      res.status(200).json(
-        createSuccessResponse(result)
-      );
+      res.status(200).json(createSuccessResponse(result));
     } catch (error) {
       console.error('Combat simulation error:', error);
-      res.status(500).json(
-        createErrorResponse('Combat simulation failed')
-      );
+      res.status(500).json(createErrorResponse('Combat simulation failed'));
     }
   };
 
@@ -58,14 +54,12 @@ export class CombatController {
   getEnemyTemplates = async (req: Request, res: Response): Promise<void> => {
     try {
       const enemies: EnemyTemplate[] = this.combatService.getEnemyTemplates();
-      res.status(200).json(
-        createSuccessResponse(enemies)
-      );
+      res.status(200).json(createSuccessResponse(enemies));
     } catch (error) {
       console.error('Get enemy templates error:', error);
-      res.status(500).json(
-        createErrorResponse('Failed to retrieve enemy templates')
-      );
+      res
+        .status(500)
+        .json(createErrorResponse('Failed to retrieve enemy templates'));
     }
   };
 
@@ -79,20 +73,18 @@ export class CombatController {
       const enemy = this.combatService.getEnemyTemplate(id);
 
       if (!enemy) {
-        res.status(404).json(
-          createErrorResponse(`Enemy template '${id}' not found`)
-        );
+        res
+          .status(404)
+          .json(createErrorResponse(`Enemy template '${id}' not found`));
         return;
       }
 
-      res.status(200).json(
-        createSuccessResponse(enemy)
-      );
+      res.status(200).json(createSuccessResponse(enemy));
     } catch (error) {
       console.error('Get enemy template error:', error);
-      res.status(500).json(
-        createErrorResponse('Failed to retrieve enemy template')
-      );
+      res
+        .status(500)
+        .json(createErrorResponse('Failed to retrieve enemy template'));
     }
   };
 
@@ -106,14 +98,12 @@ export class CombatController {
       const limit = parseInt(req.query.limit as string) || 10;
 
       const logs = this.combatService.getPlayerCombatLogs(playerId, limit);
-      res.status(200).json(
-        createSuccessResponse(logs)
-      );
+      res.status(200).json(createSuccessResponse(logs));
     } catch (error) {
       console.error('Get player combat logs error:', error);
-      res.status(500).json(
-        createErrorResponse('Failed to retrieve combat logs')
-      );
+      res
+        .status(500)
+        .json(createErrorResponse('Failed to retrieve combat logs'));
     }
   };
 
@@ -127,20 +117,16 @@ export class CombatController {
       const logs = this.combatService.getCombatLogs(playerId, combatId);
 
       if (!logs) {
-        res.status(404).json(
-          createErrorResponse('Combat session not found')
-        );
+        res.status(404).json(createErrorResponse('Combat session not found'));
         return;
       }
 
-      res.status(200).json(
-        createSuccessResponse(logs)
-      );
+      res.status(200).json(createSuccessResponse(logs));
     } catch (error) {
       console.error('Get combat logs error:', error);
-      res.status(500).json(
-        createErrorResponse('Failed to retrieve combat logs')
-      );
+      res
+        .status(500)
+        .json(createErrorResponse('Failed to retrieve combat logs'));
     }
   };
 
@@ -158,19 +144,24 @@ export class CombatController {
 
     // Validate player stats
     const stats = request.playerStats;
-    if (typeof stats.health !== 'number' || 
-        typeof stats.maxHealth !== 'number' ||
-        typeof stats.attack !== 'number' ||
-        typeof stats.defense !== 'number' ||
-        typeof stats.speed !== 'number') {
+    if (
+      typeof stats.health !== 'number' ||
+      typeof stats.maxHealth !== 'number' ||
+      typeof stats.attack !== 'number' ||
+      typeof stats.defense !== 'number' ||
+      typeof stats.speed !== 'number'
+    ) {
       return false;
     }
 
     // Validate weapon
     const weapon = request.playerWeapon;
-    if (!weapon.id || !weapon.name || 
-        typeof weapon.baseDamage !== 'number' ||
-        typeof weapon.multiplier !== 'number') {
+    if (
+      !weapon.id ||
+      !weapon.name ||
+      typeof weapon.baseDamage !== 'number' ||
+      typeof weapon.multiplier !== 'number'
+    ) {
       return false;
     }
 

@@ -10,7 +10,7 @@ import {
   Weapon,
   Combatant,
   CombatRewards,
-  restoreHealth
+  restoreHealth,
 } from '@shared';
 import { CombatEngine } from './CombatEngine';
 import { CombatLogStorage } from './CombatLogStorage';
@@ -39,18 +39,18 @@ export class CombatService {
         maxHealth: 50,
         attack: 8,
         defense: 5,
-        speed: 12
+        speed: 12,
       },
       weapon: {
         id: 'rusty_dagger',
         name: 'Rusty Dagger',
         baseDamage: 5,
-        multiplier: 1.0
+        multiplier: 1.0,
       },
       rewards: {
         experience: 25,
-        gold: 10
-      }
+        gold: 10,
+      },
     });
 
     // Orc template
@@ -62,18 +62,18 @@ export class CombatService {
         maxHealth: 100,
         attack: 15,
         defense: 10,
-        speed: 8
+        speed: 8,
       },
       weapon: {
         id: 'iron_axe',
         name: 'Iron Axe',
         baseDamage: 12,
-        multiplier: 1.2
+        multiplier: 1.2,
       },
       rewards: {
         experience: 75,
-        gold: 30
-      }
+        gold: 30,
+      },
     });
 
     // Dragon template
@@ -85,19 +85,19 @@ export class CombatService {
         maxHealth: 300,
         attack: 35,
         defense: 20,
-        speed: 15
+        speed: 15,
       },
       weapon: {
         id: 'dragon_breath',
         name: 'Dragon Breath',
         baseDamage: 25,
-        multiplier: 1.5
+        multiplier: 1.5,
       },
       rewards: {
         experience: 500,
         gold: 200,
-        items: ['dragon_scale', 'fire_essence']
-      }
+        items: ['dragon_scale', 'fire_essence'],
+      },
     });
   }
 
@@ -140,7 +140,7 @@ export class CombatService {
       name: 'Player',
       stats: { ...request.playerStats },
       weapon: request.playerWeapon,
-      isPlayer: true
+      isPlayer: true,
     };
 
     const enemy: Combatant = {
@@ -148,7 +148,7 @@ export class CombatService {
       name: enemyTemplate.name,
       stats: { ...enemyTemplate.stats },
       weapon: enemyTemplate.weapon,
-      isPlayer: false
+      isPlayer: false,
     };
 
     // Resolve combat
@@ -162,7 +162,7 @@ export class CombatService {
 
     return {
       result,
-      updatedPlayerStats
+      updatedPlayerStats,
     };
   }
 

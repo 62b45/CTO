@@ -2,7 +2,14 @@
  * Shared utility functions
  */
 
-import { User, ApiResponse, CombatStats, Weapon, CombatLogEntry, CombatAction } from './types';
+import {
+  User,
+  ApiResponse,
+  CombatStats,
+  Weapon,
+  CombatLogEntry,
+  CombatAction,
+} from './types';
 
 /**
  * Format a user's full name
@@ -77,22 +84,25 @@ export function calculateDamage(
 ): { damage: number; roll: number; variance: number } {
   // Base damage from weapon and attack stat
   const baseDamage = weapon.baseDamage + attacker.attack * weapon.multiplier;
-  
+
   // Random variance of ±12.5%
   const variancePercent = 0.125; // 12.5%
   const variance = rng.nextFloat(1 - variancePercent, 1 + variancePercent);
-  
+
   // Apply variance
   const damageWithVariance = baseDamage * variance;
-  
+
   // Apply defense scaling (defense reduces damage by up to 90%, minimum 10% gets through)
-  const defenseReduction = Math.max(0.1, 1 - (defender.defense * 0.009)); // Each defense point reduces 0.9% damage
-  const finalDamage = Math.max(1, Math.floor(damageWithVariance * defenseReduction));
-  
+  const defenseReduction = Math.max(0.1, 1 - defender.defense * 0.009); // Each defense point reduces 0.9% damage
+  const finalDamage = Math.max(
+    1,
+    Math.floor(damageWithVariance * defenseReduction)
+  );
+
   return {
     damage: finalDamage,
     roll: baseDamage,
-    variance: variance
+    variance: variance,
   };
 }
 
@@ -136,6 +146,6 @@ export function isDefeated(stats: CombatStats): boolean {
 export function restoreHealth(stats: CombatStats): CombatStats {
   return {
     ...stats,
-    health: stats.maxHealth
+    health: stats.maxHealth,
   };
 }

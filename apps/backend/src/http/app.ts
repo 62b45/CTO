@@ -1,5 +1,5 @@
 import express, { type Express, type Request, type Response } from 'express';
-import type { PlayerStats } from '@shared';
+import type { PlayerStats, ProfessionType } from '@shared';
 import {
   ACTION_METADATA,
   ACTION_TYPES,
@@ -12,10 +12,14 @@ import {
 import { CooldownActiveError } from '../cooldowns/errors';
 import { ActionCooldownService } from '../cooldowns/service';
 import { PlayerProgressionService } from '../progression/service';
+import { ProfessionService } from '../professions/service';
+import type { EconomyService } from '../economy/service';
 
 export interface CreateAppOptions {
   service: ActionCooldownService;
   progressionService?: PlayerProgressionService;
+  professionService?: ProfessionService;
+  economyService?: EconomyService;
   handlers?: Partial<Record<ActionType, ActionHandler>>;
   logger?: Pick<Console, 'error'>;
 }
@@ -73,6 +77,8 @@ function buildHandlers(
 export function createApp({
   service,
   progressionService,
+  professionService,
+  economyService,
   handlers: overrides,
   logger,
 }: CreateAppOptions): Express {
@@ -407,6 +413,310 @@ export function createApp({
         } catch (error) {
           errLogger.error(
             'Error recalculating stats: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+  }
+
+  if (professionService) {
+    app.get(
+      '/players/:playerId/professions',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const professions =
+            await professionService.getOrCreateProfessions(playerId);
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              professions: Object.entries(professions.professions).map(
+                ([, prof]) => ({
+                  profession: prof.profession,
+                  level: prof.level,
+                  currentXp: prof.currentXp,
+                  totalXpEarned: prof.totalXpEarned,
+                  nextLevelXp: professionService.getNextLevelXp(prof),
+                  progressToNextLevel:
+                    professionService.getProgressToNextLevel(prof),
+                  bonus: (
+                    professionService.constructor as typeof ProfessionService
+                  ).getBonus(prof.profession, prof.level),
+                  createdAt: prof.createdAt.toISOString(),
+                  updatedAt: prof.updatedAt.toISOString(),
+                })
+              ),
+            },
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error fetching professions: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/players/:playerId/professions/:profession/gain-xp',
+      async (
+        req: Request<{ playerId: string; profession: string }>,
+        res: Response
+      ) => {
+        try {
+          const { playerId, profession: professionParam } = req.params;
+          const { amount } = req.body as { amount: number };
+
+          if (!amount || amount <= 0) {
+            res.status(400).json({
+              success: false,
+              message: 'XP amount must be a positive number',
+            });
+            return;
+          }
+
+          const validProfessions: ProfessionType[] = [
+            'worker',
+            'crafter',
+            'enchanter',
+            'merchant',
+            'lootboxer',
+          ];
+
+          if (!validProfessions.includes(professionParam as ProfessionType)) {
+            res.status(400).json({
+              success: false,
+              message: `Invalid profession: ${professionParam}`,
+            });
+            return;
+          }
+
+          const profession = professionParam as ProfessionType;
+          const professions = await professionService.gainProfessionXp(
+            playerId,
+            profession,
+            amount
+          );
+
+          const prof = professions.professions[profession];
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              profession: {
+                profession: prof.profession,
+                level: prof.level,
+                currentXp: prof.currentXp,
+                totalXpEarned: prof.totalXpEarned,
+                nextLevelXp: professionService.getNextLevelXp(prof),
+                progressToNextLevel:
+                  professionService.getProgressToNextLevel(prof),
+                bonus: (
+                  professionService.constructor as typeof ProfessionService
+                ).getBonus(prof.profession, prof.level),
+                createdAt: prof.createdAt.toISOString(),
+                updatedAt: prof.updatedAt.toISOString(),
+              },
+            },
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error gaining profession XP: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+  }
+
+  if (economyService) {
+    app.get('/shop/items', async (_req, res: Response) => {
+      try {
+        const items = economyService.getShopItems();
+        res.json({
+          success: true,
+          data: {
+            items,
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        errLogger.error(
+          'Error fetching shop items: %s',
+          (error as Error).stack ?? String(error)
+        );
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error',
+        });
+      }
+    });
+
+    app.get(
+      '/players/:playerId/inventory',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const inventory = await economyService.getOrCreateInventory(playerId);
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              inventory: {
+                coins: inventory.coins,
+                gems: inventory.gems,
+                items: inventory.items,
+                createdAt: inventory.createdAt.toISOString(),
+                updatedAt: inventory.updatedAt.toISOString(),
+                lastTransactionAt: inventory.lastTransactionAt?.toISOString(),
+              },
+            },
+          });
+        } catch (error) {
+          errLogger.error(
+            'Error fetching inventory: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/players/:playerId/shop/buy',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const { itemId, quantity } = req.body as {
+            itemId: string;
+            quantity: number;
+          };
+
+          if (!itemId || !quantity || quantity <= 0) {
+            res.status(400).json({
+              success: false,
+              message: 'itemId and positive quantity are required',
+            });
+            return;
+          }
+
+          const inventory = await economyService.buyItem(
+            playerId,
+            itemId,
+            quantity
+          );
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              inventory: {
+                coins: inventory.coins,
+                gems: inventory.gems,
+                items: inventory.items,
+                createdAt: inventory.createdAt.toISOString(),
+                updatedAt: inventory.updatedAt.toISOString(),
+                lastTransactionAt: inventory.lastTransactionAt?.toISOString(),
+              },
+            },
+          });
+        } catch (error) {
+          const errorMessage = (error as Error).message;
+          if (
+            errorMessage.includes('not found') ||
+            errorMessage.includes('Insufficient')
+          ) {
+            res.status(400).json({
+              success: false,
+              message: errorMessage,
+            });
+            return;
+          }
+
+          errLogger.error(
+            'Error buying item: %s',
+            (error as Error).stack ?? String(error)
+          );
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+      }
+    );
+
+    app.post(
+      '/players/:playerId/shop/sell',
+      async (req: Request<{ playerId: string }>, res: Response) => {
+        try {
+          const { playerId } = req.params;
+          const { itemId, quantity } = req.body as {
+            itemId: string;
+            quantity: number;
+          };
+
+          if (!itemId || !quantity || quantity <= 0) {
+            res.status(400).json({
+              success: false,
+              message: 'itemId and positive quantity are required',
+            });
+            return;
+          }
+
+          const inventory = await economyService.sellItem(
+            playerId,
+            itemId,
+            quantity
+          );
+
+          res.json({
+            success: true,
+            data: {
+              playerId,
+              inventory: {
+                coins: inventory.coins,
+                gems: inventory.gems,
+                items: inventory.items,
+                createdAt: inventory.createdAt.toISOString(),
+                updatedAt: inventory.updatedAt.toISOString(),
+                lastTransactionAt: inventory.lastTransactionAt?.toISOString(),
+              },
+            },
+          });
+        } catch (error) {
+          const errorMessage = (error as Error).message;
+          if (
+            errorMessage.includes('not found') ||
+            errorMessage.includes('Insufficient')
+          ) {
+            res.status(400).json({
+              success: false,
+              message: errorMessage,
+            });
+            return;
+          }
+
+          errLogger.error(
+            'Error selling item: %s',
             (error as Error).stack ?? String(error)
           );
           res.status(500).json({

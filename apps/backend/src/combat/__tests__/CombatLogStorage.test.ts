@@ -21,13 +21,13 @@ describe('CombatLogStorage', () => {
           type: 'attack',
           damage: 25,
           roll: 40,
-          variance: 0.95
+          variance: 0.95,
         },
         description: 'Player attacks Enemy for 25 damage!',
         remainingHealth: {
           player1: 100,
-          enemy1: 55
-        }
+          enemy1: 55,
+        },
       },
       {
         turn: 2,
@@ -38,21 +38,21 @@ describe('CombatLogStorage', () => {
           type: 'attack',
           damage: 15,
           roll: 23,
-          variance: 1.05
+          variance: 1.05,
         },
         description: 'Enemy attacks Player for 15 damage!',
         remainingHealth: {
           player1: 85,
-          enemy1: 55
-        }
-      }
+          enemy1: 55,
+        },
+      },
     ];
   });
 
   describe('storeCombatLogs', () => {
     it('should store combat logs and return session ID', () => {
       const sessionId = storage.storeCombatLogs('player1', mockLogs);
-      
+
       expect(sessionId).toBeDefined();
       expect(typeof sessionId).toBe('string');
       expect(sessionId).toMatch(/^combat_\d+_[a-z0-9]+$/);
@@ -60,7 +60,7 @@ describe('CombatLogStorage', () => {
 
     it('should store logs correctly', () => {
       const sessionId = storage.storeCombatLogs('player1', mockLogs);
-      
+
       const playerLogs = storage.getPlayerLogs('player1');
       expect(playerLogs).toHaveLength(1);
       expect(playerLogs[0].id).toBe(sessionId);
@@ -71,24 +71,24 @@ describe('CombatLogStorage', () => {
       // Create many logs to exceed the limit
       const manyLogs = Array.from({ length: 1500 }, (_, i) => ({
         ...mockLogs[0],
-        turn: i + 1
+        turn: i + 1,
       }));
 
       const sessionId = storage.storeCombatLogs('player1', manyLogs);
       const storedLogs = storage.getCombatLogs('player1', sessionId);
-      
+
       expect(storedLogs).toHaveLength(1000); // Should be limited to maxLogsPerSession
     });
 
     it('should handle multiple players separately', () => {
       const sessionId1 = storage.storeCombatLogs('player1', mockLogs);
       const sessionId2 = storage.storeCombatLogs('player2', mockLogs);
-      
+
       expect(sessionId1).not.toBe(sessionId2);
-      
+
       const player1Logs = storage.getPlayerLogs('player1');
       const player2Logs = storage.getPlayerLogs('player2');
-      
+
       expect(player1Logs).toHaveLength(1);
       expect(player2Logs).toHaveLength(1);
       expect(player1Logs[0].id).toBe(sessionId1);
@@ -119,10 +119,10 @@ describe('CombatLogStorage', () => {
       for (let i = 0; i < 5; i++) {
         storage.storeCombatLogs('player1', mockLogs);
       }
-      
+
       const limitedLogs = storage.getPlayerLogs('player1', 3);
       expect(limitedLogs).toHaveLength(3);
-      
+
       const allLogs = storage.getPlayerLogs('player1', 10);
       expect(allLogs.length).toBeGreaterThan(3);
     });
@@ -130,7 +130,7 @@ describe('CombatLogStorage', () => {
     it('should return logs in reverse chronological order', () => {
       const sessionId1 = storage.storeCombatLogs('player1', mockLogs);
       const sessionId2 = storage.storeCombatLogs('player1', mockLogs);
-      
+
       const logs = storage.getPlayerLogs('player1');
       expect(logs[0].id).toBe(sessionId2); // Most recent first
       expect(logs[1].id).toBe(sessionId1);
@@ -185,10 +185,10 @@ describe('CombatLogStorage', () => {
 
     it('should clear logs for specific player', () => {
       storage.clearPlayerLogs('player1');
-      
+
       const player1Logs = storage.getPlayerLogs('player1');
       const player2Logs = storage.getPlayerLogs('player2');
-      
+
       expect(player1Logs).toHaveLength(0);
       expect(player2Logs).toHaveLength(1);
     });
@@ -198,31 +198,31 @@ describe('CombatLogStorage', () => {
     it('should remove old logs', () => {
       // Mock current date
       const mockCurrentDate = new Date('2023-12-01T00:00:00Z');
-      
+
       // Store some logs with different timestamps
       const oldDate = new Date('2023-10-20T00:00:00Z'); // 42 days ago
       const recentDate = new Date('2023-11-20T00:00:00Z'); // 11 days ago
-      
+
       const oldLogs = mockLogs.map(log => ({
         ...log,
-        timestamp: oldDate
+        timestamp: oldDate,
       }));
-      
+
       const recentLogs = mockLogs.map(log => ({
         ...log,
-        timestamp: recentDate
+        timestamp: recentDate,
       }));
-      
+
       // Store logs with specific timestamps
       storage.storeCombatLogs('player1', oldLogs, oldDate);
       storage.storeCombatLogs('player2', recentLogs, recentDate);
-      
+
       // Clean up logs older than 30 days from mock current date
       storage.cleanupOldLogs(30);
-      
+
       const player1LogsAfterCleanup = storage.getPlayerLogs('player1');
       const player2LogsAfterCleanup = storage.getPlayerLogs('player2');
-      
+
       expect(player1LogsAfterCleanup).toHaveLength(0); // Should be removed
       expect(player2LogsAfterCleanup).toHaveLength(1); // Should remain
     });
@@ -237,7 +237,7 @@ describe('CombatLogStorage', () => {
 
     it('should return correct statistics', () => {
       const stats = storage.getStorageStats();
-      
+
       expect(stats.totalPlayers).toBe(2);
       expect(stats.totalSessions).toBe(3);
       expect(stats.totalLogs).toBe(6); // 3 sessions * 2 logs each
@@ -246,7 +246,7 @@ describe('CombatLogStorage', () => {
     it('should return zero stats for empty storage', () => {
       const emptyStorage = new CombatLogStorage();
       const stats = emptyStorage.getStorageStats();
-      
+
       expect(stats.totalPlayers).toBe(0);
       expect(stats.totalSessions).toBe(0);
       expect(stats.totalLogs).toBe(0);

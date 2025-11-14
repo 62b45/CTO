@@ -2,12 +2,12 @@
  * Unit tests for combat utilities
  */
 
-import { 
-  SeededRNG, 
-  calculateDamage, 
+import {
+  SeededRNG,
+  calculateDamage,
   generateCombatLogDescription,
   isDefeated,
-  restoreHealth
+  restoreHealth,
 } from '../utils';
 import { CombatStats, Weapon, CombatAction } from '../types';
 
@@ -76,7 +76,7 @@ describe('calculateDamage', () => {
       maxHealth: 100,
       attack: 20,
       defense: 10,
-      speed: 15
+      speed: 15,
     };
 
     defender = {
@@ -84,14 +84,14 @@ describe('calculateDamage', () => {
       maxHealth: 80,
       attack: 15,
       defense: 8,
-      speed: 12
+      speed: 12,
     };
 
     weapon = {
       id: 'sword',
       name: 'Iron Sword',
       baseDamage: 10,
-      multiplier: 1.5
+      multiplier: 1.5,
     };
 
     rng = new SeededRNG(12345);
@@ -118,11 +118,16 @@ describe('calculateDamage', () => {
   it('should apply defense scaling', () => {
     const highDefenseDefender = {
       ...defender,
-      defense: 50
+      defense: 50,
     };
 
     const normalResult = calculateDamage(attacker, defender, weapon, rng);
-    const highDefenseResult = calculateDamage(attacker, highDefenseDefender, weapon, new SeededRNG(12345));
+    const highDefenseResult = calculateDamage(
+      attacker,
+      highDefenseDefender,
+      weapon,
+      new SeededRNG(12345)
+    );
 
     expect(highDefenseResult.damage).toBeLessThan(normalResult.damage);
   });
@@ -130,10 +135,15 @@ describe('calculateDamage', () => {
   it('should have minimum damage of 1 for very high defense', () => {
     const veryHighDefenseDefender = {
       ...defender,
-      defense: 200 // 200 * 0.009 = 1.8, so 1 - 1.8 = -0.8, max(0.1, -0.8) = 0.1
+      defense: 200, // 200 * 0.009 = 1.8, so 1 - 1.8 = -0.8, max(0.1, -0.8) = 0.1
     };
 
-    const result = calculateDamage(attacker, veryHighDefenseDefender, weapon, rng);
+    const result = calculateDamage(
+      attacker,
+      veryHighDefenseDefender,
+      weapon,
+      rng
+    );
     expect(result.damage).toBe(1);
   });
 
@@ -153,11 +163,16 @@ describe('generateCombatLogDescription', () => {
   const action: CombatAction = {
     attackerId: 'player1',
     targetId: 'enemy1',
-    type: 'attack'
+    type: 'attack',
   };
 
   it('should generate attack description with damage', () => {
-    const description = generateCombatLogDescription(action, 'Player', 'Enemy', 25);
+    const description = generateCombatLogDescription(
+      action,
+      'Player',
+      'Enemy',
+      25
+    );
     expect(description).toBe('Player attacks Enemy for 25 damage!');
   });
 
@@ -168,25 +183,42 @@ describe('generateCombatLogDescription', () => {
 
   it('should generate defend description', () => {
     const defendAction = { ...action, type: 'defend' as const };
-    const description = generateCombatLogDescription(defendAction, 'Player', 'Enemy');
+    const description = generateCombatLogDescription(
+      defendAction,
+      'Player',
+      'Enemy'
+    );
     expect(description).toBe('Player takes a defensive stance!');
   });
 
   it('should generate skill description with damage', () => {
     const skillAction = { ...action, type: 'skill' as const };
-    const description = generateCombatLogDescription(skillAction, 'Player', 'Enemy', 30);
+    const description = generateCombatLogDescription(
+      skillAction,
+      'Player',
+      'Enemy',
+      30
+    );
     expect(description).toBe('Player uses a skill on Enemy for 30 damage!');
   });
 
   it('should generate skill description without damage', () => {
     const skillAction = { ...action, type: 'skill' as const };
-    const description = generateCombatLogDescription(skillAction, 'Player', 'Enemy');
+    const description = generateCombatLogDescription(
+      skillAction,
+      'Player',
+      'Enemy'
+    );
     expect(description).toBe('Player uses a skill on Enemy!');
   });
 
   it('should generate default description for unknown action type', () => {
     const unknownAction = { ...action, type: 'attack' as const };
-    const description = generateCombatLogDescription(unknownAction, 'Player', 'Enemy');
+    const description = generateCombatLogDescription(
+      unknownAction,
+      'Player',
+      'Enemy'
+    );
     expect(description).toBe('Player attacks Enemy!');
   });
 });
@@ -198,7 +230,7 @@ describe('isDefeated', () => {
       maxHealth: 100,
       attack: 10,
       defense: 5,
-      speed: 10
+      speed: 10,
     };
 
     expect(isDefeated(stats)).toBe(true);
@@ -210,7 +242,7 @@ describe('isDefeated', () => {
       maxHealth: 100,
       attack: 10,
       defense: 5,
-      speed: 10
+      speed: 10,
     };
 
     expect(isDefeated(stats)).toBe(true);
@@ -222,7 +254,7 @@ describe('isDefeated', () => {
       maxHealth: 100,
       attack: 10,
       defense: 5,
-      speed: 10
+      speed: 10,
     };
 
     expect(isDefeated(stats)).toBe(false);
@@ -236,7 +268,7 @@ describe('restoreHealth', () => {
       maxHealth: 100,
       attack: 10,
       defense: 5,
-      speed: 10
+      speed: 10,
     };
 
     const restoredStats = restoreHealth(damagedStats);
@@ -249,7 +281,7 @@ describe('restoreHealth', () => {
       maxHealth: 100,
       attack: 10,
       defense: 5,
-      speed: 10
+      speed: 10,
     };
 
     const restoredStats = restoreHealth(damagedStats);
@@ -265,7 +297,7 @@ describe('restoreHealth', () => {
       maxHealth: 100,
       attack: 10,
       defense: 5,
-      speed: 10
+      speed: 10,
     };
 
     const restoredStats = restoreHealth(fullHealthStats);
