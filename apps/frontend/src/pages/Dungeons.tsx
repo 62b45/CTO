@@ -45,6 +45,7 @@ interface DungeonSummary {
 interface DungeonListResponse {
   success: boolean;
   data: DungeonSummary[];
+  message?: string;
 }
 
 interface EnterDungeonPayload {
