@@ -1,14 +1,14 @@
 import request from 'supertest';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals';
 import { ACTION_METADATA } from '../actions/metadata';
 import { ActionCooldownService } from '../cooldowns/service';
 import { createApp } from '../http/app';
 import { InMemoryCooldownRepository } from '../storage/inMemoryCooldownRepository';
 
 const noopLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 describe('ActionCooldownService', () => {
@@ -78,13 +78,13 @@ describe('ActionCooldownService', () => {
 
 describe('Action cooldown HTTP endpoints', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(Date.UTC(2023, 0, 1, 0, 0, 0)));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(Date.UTC(2023, 0, 1, 0, 0, 0)));
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
+    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   it('returns 429 with remaining cooldown when triggered too soon', async () => {

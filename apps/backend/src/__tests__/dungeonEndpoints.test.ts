@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from '@jest/globals';
 import type { Express } from 'express';
 import { createApp } from '../http/app';
 import { ActionCooldownService } from '../cooldowns/service';
@@ -10,9 +10,9 @@ import { InMemoryProgressionRepository } from '../storage/inMemoryProgressionRep
 import { InMemoryDungeonRepository } from '../storage/dungeonRepository';
 
 const noopLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 describe('Dungeon API endpoints', () => {
@@ -21,8 +21,8 @@ describe('Dungeon API endpoints', () => {
   let dungeonService: DungeonService;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(Date.UTC(2024, 0, 1, 0, 0, 0)));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(Date.UTC(2024, 0, 1, 0, 0, 0)));
 
     const cooldownRepository = new InMemoryCooldownRepository();
     const progressionRepository = new InMemoryProgressionRepository();
@@ -53,8 +53,8 @@ describe('Dungeon API endpoints', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
+    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   async function levelPlayer(playerId: string, targetLevel: number): Promise<void> {

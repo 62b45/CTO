@@ -1,0 +1,415 @@
+import { describe, expect, it, beforeEach, jest } from '@jest/globals';
+import { PlayerProgressionService } from '../progression/service';
+import { InMemoryProgressionRepository } from '../storage/inMemoryProgressionRepository';
+import { CombatService } from '../combat/CombatService';
+import { ProfessionService } from '../professions/service';
+import { InMemoryProfessionsRepository } from '../storage/professionsRepository';
+import { EconomyService } from '../economy/service';
+import { FileInventoryRepository } from '../storage/inventoryRepository';
+import { LootboxService } from '../lootbox/service';
+import { ActionCooldownService } from '../cooldowns/actionCooldownService';
+import { InMemoryCooldownRepository } from '../storage/inMemoryCooldownRepository';
+import { ACTION_METADATA, createActionHandlers } from '../actions/metadata';
+import { PlayerStats } from '@shared';
+import path from 'path';
+
+interface SimulationResults {
+  totalActions: number;
+  totalExperience: number;
+  levelsGained: number;
+  finalLevel: number;
+  experienceDistribution: number[];
+  cooldownViolations: number;
+  averageLevel: number;
+  statGrowth: {
+    startingStats: PlayerStats;
+    finalStats: PlayerStats;
+    totalStatPoints: number;
+  };
+  combatResults: {
+    totalCombats: number;
+    wins: number;
+    losses: number;
+    averageExperiencePerCombat: number;
+  };
+  professionBonuses: {
+    totalBonusXP: number;
+    totalBonusGold: number;
+    bonusActivations: number;
+  };
+  lootboxResults: {
+    opened: number;
+    rarityDistribution: Record<string, number>;
+    totalValue: number;
+  };
+  actionDistribution: Record<string, number>;
+  averageRewardsPerAction: {
+    experience: number;
+    gold: number;
+    items: number;
+  };
+}
+
+describe('Game Balance Simulation (100k Actions)', () => {
+  let progressionService: PlayerProgressionService;
+  let combatService: CombatService;
+  let professionService: ProfessionService;
+  let economyService: EconomyService;
+  let lootboxService: LootboxService;
+  let cooldownService: ActionCooldownService;
+  let clockNow: number;
+  let actionHandlers: Record<string, any>;
+  let testPlayerId: string;
+
+  // Configuration for simulation
+  const SIMULATION_ACTIONS = 100000;
+  const ACTION_COOLDOWN_MS = 5000; // 5 seconds between actions for simulation
+
+  beforeEach(() => {
+    clockNow = Date.UTC(2023, 0, 1, 0, 0, 0);
+    testPlayerId = 'test-simulation-player';
+
+    // Initialize repositories
+    const progressionRepo = new InMemoryProgressionRepository();
+    const professionsRepo = new InMemoryProfessionsRepository();
+    const inventoryRepo = new FileInventoryRepository(
+      path.join(__dirname, '../../../data/test-inventory.json')
+    );
+    const cooldownRepo = new InMemoryCooldownRepository();
+
+    // Initialize services
+    progressionService = new PlayerProgressionService(
+      progressionRepo,
+      { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
+      () => clockNow
+    );
+
+    combatService = new CombatService();
+    
+    professionService = new ProfessionService(
+      professionsRepo,
+      { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
+      () => clockNow
+    );
+
+    economyService = new EconomyService(
+      inventoryRepo,
+      professionService,
+      { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
+      () => clockNow
+    );
+
+    lootboxService = new LootboxService(
+      professionService,
+      economyService,
+      { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
+      () => clockNow
+    );
+
+    cooldownService = new ActionCooldownService(
+      cooldownRepo,
+      { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
+      () => clockNow
+    );
+
+    actionHandlers = createActionHandlers();
+  });
+
+  it('should maintain balanced progression over 100k hunt actions', async () => {
+    const results = await runSimulation();
+    
+    // Core balance assertions
+    expect(results.totalActions).toBe(SIMULATION_ACTIONS);
+    expect(results.levelsGained).toBeGreaterThan(0);
+    expect(results.levelsGained).toBeLessThan(100); // Reasonable upper bound
+    
+    // Experience distribution should follow expected patterns
+    const experienceStdDev = calculateStandardDeviation(results.experienceDistribution);
+    expect(experienceStdDev).toBeGreaterThan(0); // Should have variance
+    expect(experienceStdDev).toBeLessThan(100); // But not too much variance
+    
+    // Cooldown enforcement should be strict
+    expect(results.cooldownViolations).toBe(0);
+    
+    // Average rewards should be within expected ranges
+    expect(results.averageRewardsPerAction.experience).toBeGreaterThan(20);
+    expect(results.averageRewardsPerAction.experience).toBeLessThan(80);
+  });
+
+  it('should demonstrate proper stat growth scaling', async () => {
+    const results = await runSimulation();
+    
+    // Stat growth should be linear with level
+    const expectedStatPoints = results.finalLevel * 3; // 3 stat points per level
+    expect(results.statGrowth.totalStatPoints).toBe(expectedStatPoints);
+    
+    // Final stats should reflect proper progression
+    expect(results.statGrowth.finalStats.level).toBe(results.finalLevel);
+    expect(results.statGrowth.finalStats.strength).toBeGreaterThan(
+      results.statGrowth.startingStats.strength
+    );
+  });
+
+  it('should maintain combat balance with reasonable win rates', async () => {
+    const results = await runSimulation();
+    
+    if (results.combatResults.totalCombats > 0) {
+      // Win rate should be reasonable (not 0% or 100%)
+      const winRate = results.combatResults.wins / results.combatResults.totalCombats;
+      expect(winRate).toBeGreaterThan(0.2); // At least 20% win rate
+      expect(winRate).toBeLessThan(0.9); // At most 90% win rate
+      
+      // Experience from combat should be balanced
+      expect(results.combatResults.averageExperiencePerCombat).toBeGreaterThan(20);
+      expect(results.combatResults.averageExperiencePerCombat).toBeLessThan(200);
+    }
+  });
+
+  it('should properly enforce action cooldowns', async () => {
+    const results = await runSimulation();
+    
+    // No cooldown violations should occur
+    expect(results.cooldownViolations).toBe(0);
+    
+    // Actions should be distributed according to cooldowns
+    const huntActions = results.actionDistribution['hunt'] || 0;
+    expect(huntActions).toBeGreaterThan(0);
+    
+    // Fast cooldown actions should be more frequent
+    const fastActions = ['heal', 'hunt'].reduce((sum, action) => 
+      sum + (results.actionDistribution[action] || 0), 0
+    );
+    const slowActions = ['dungeon', 'quest'].reduce((sum, action) => 
+      sum + (results.actionDistribution[action] || 0), 0
+    );
+    
+    if (slowActions > 0) {
+      expect(fastActions).toBeGreaterThan(slowActions);
+    }
+  });
+
+  it('should apply profession bonuses correctly', async () => {
+    const results = await runSimulation();
+    
+    // Profession bonuses should be applied when applicable
+    expect(results.professionBonuses.totalBonusXP).toBeGreaterThanOrEqual(0);
+    expect(results.professionBonuses.totalBonusGold).toBeGreaterThanOrEqual(0);
+    
+    // Bonus activations should be reasonable
+    if (results.professionBonuses.bonusActivations > 0) {
+      const bonusPerAction = results.professionBonuses.totalBonusXP / 
+        results.professionBonuses.bonusActivations;
+      expect(bonusPerAction).toBeGreaterThan(0);
+    }
+  });
+
+  it('should maintain lootbox probability balance', async () => {
+    const results = await runSimulation();
+    
+    if (results.lootboxResults.opened > 0) {
+      // Rarity distribution should match expected probabilities
+      const total = Object.values(results.lootboxResults.rarityDistribution)
+        .reduce((sum, count) => sum + count, 0);
+      expect(total).toBe(results.lootboxResults.opened);
+      
+      // Common should be most frequent, legendary least frequent
+      const common = results.lootboxResults.rarityDistribution['common'] || 0;
+      const legendary = results.lootboxResults.rarityDistribution['legendary'] || 0;
+      
+      if (legendary > 0) {
+        expect(common).toBeGreaterThan(legendary);
+      }
+      
+      // Legendary drop rate should be approximately 0.5%
+      const legendaryRate = legendary / results.lootboxResults.opened;
+      expect(legendaryRate).toBeLessThan(0.01); // Less than 1%
+    }
+  });
+
+  async function runSimulation(): Promise<SimulationResults> {
+    const startTime = Date.now();
+    const results: SimulationResults = {
+      totalActions: 0,
+      totalExperience: 0,
+      levelsGained: 0,
+      finalLevel: 1,
+      experienceDistribution: [],
+      cooldownViolations: 0,
+      averageLevel: 1,
+      statGrowth: {
+        startingStats: {
+          level: 1,
+          health: 100,
+          maxHealth: 100,
+          attack: 10,
+          defense: 8,
+          speed: 10,
+          strength: 10,
+          agility: 10,
+          intelligence: 10,
+          statPoints: 0,
+        },
+        finalStats: {
+          level: 1,
+          health: 100,
+          maxHealth: 100,
+          attack: 10,
+          defense: 8,
+          speed: 10,
+          strength: 10,
+          agility: 10,
+          intelligence: 10,
+          statPoints: 0,
+        },
+        totalStatPoints: 0,
+      },
+      combatResults: {
+        totalCombats: 0,
+        wins: 0,
+        losses: 0,
+        averageExperiencePerCombat: 0,
+      },
+      professionBonuses: {
+        totalBonusXP: 0,
+        totalBonusGold: 0,
+        bonusActivations: 0,
+      },
+      lootboxResults: {
+        opened: 0,
+        rarityDistribution: {},
+        totalValue: 0,
+      },
+      actionDistribution: {},
+      averageRewardsPerAction: {
+        experience: 0,
+        gold: 0,
+        items: 0,
+      },
+    };
+
+    // Initialize player
+    const player = await progressionService.getOrCreatePlayer(testPlayerId);
+    results.statGrowth.startingStats = { ...player.stats };
+
+    // Run simulation
+    for (let i = 0; i < SIMULATION_ACTIONS; i++) {
+      try {
+        // Advance time to respect cooldowns
+        clockNow += ACTION_COOLDOWN_MS;
+
+        // Choose action (70% hunt, 30% other actions for variety)
+        const actionType = Math.random() < 0.7 ? 'hunt' : 
+          Object.keys(ACTION_METADATA)[Math.floor(Math.random() * Object.keys(ACTION_METADATA).length)];
+
+        // Check cooldown
+        if (await cooldownService.isOnCooldown(testPlayerId, actionType)) {
+          results.cooldownViolations++;
+          continue;
+        }
+
+        // Execute action
+        const actionResult = actionHandlers[actionType](testPlayerId);
+        
+        // Track action distribution
+        results.actionDistribution[actionType] = 
+          (results.actionDistribution[actionType] || 0) + 1;
+
+        // Process rewards
+        if (actionResult.experience) {
+          results.experienceDistribution.push(actionResult.experience);
+          results.totalExperience += actionResult.experience;
+          
+          // Apply profession bonuses
+          const bonusXP = professionService.calculateBonusXP(testPlayerId, actionType, actionResult.experience);
+          if (bonusXP > 0) {
+            results.professionBonuses.totalBonusXP += bonusXP;
+            results.professionBonuses.bonusActivations++;
+          }
+          
+          // Update player progression
+          await progressionService.addExperience(testPlayerId, actionResult.experience + bonusXP);
+        }
+
+        // Handle combat for hunt actions
+        if (actionType === 'hunt') {
+          results.combatResults.totalCombats++;
+          const combatRequest = {
+            playerId: testPlayerId,
+            enemyTemplateId: 'goblin', // Default enemy for simulation
+            playerStats: player.stats,
+            playerWeapon: {
+              id: 'basic_sword',
+              name: 'Basic Sword',
+              baseDamage: 10,
+              multiplier: 1.0,
+            },
+            seed: Math.random(),
+          };
+
+          try {
+            const combatResult = combatService.simulateCombat(combatRequest);
+            if (combatResult.result.victory) {
+              results.combatResults.wins++;
+            } else {
+              results.combatResults.losses++;
+            }
+            results.combatResults.averageExperiencePerCombat += 
+              combatResult.result.rewards.experience || 0;
+          } catch (error) {
+            // Combat failed, count as loss
+            results.combatResults.losses++;
+          }
+        }
+
+        // Handle lootbox actions
+        if (actionType === 'lootbox') {
+          results.lootboxResults.opened++;
+          try {
+            const lootboxResult = await lootboxService.openLootbox(testPlayerId);
+            const rarity = lootboxResult.items[0]?.rarity || 'common';
+            results.lootboxResults.rarityDistribution[rarity] = 
+              (results.lootboxResults.rarityDistribution[rarity] || 0) + 1;
+            results.lootboxResults.totalValue += lootboxResult.items[0]?.value || 0;
+          } catch (error) {
+            // Lootbox failed to open
+          }
+        }
+
+        // Set cooldown
+        await cooldownService.setCooldown(testPlayerId, actionType);
+
+        results.totalActions++;
+
+      } catch (error) {
+        // Log error but continue simulation
+        console.warn(`Action ${i} failed:`, error);
+      }
+    }
+
+    // Calculate final statistics
+    const finalPlayer = await progressionService.getOrCreatePlayer(testPlayerId);
+    results.finalLevel = finalPlayer.stats.level;
+    results.levelsGained = results.finalLevel - results.statGrowth.startingStats.level;
+    results.statGrowth.finalStats = { ...finalPlayer.stats };
+    results.statGrowth.totalStatPoints = finalPlayer.stats.statPoints;
+    results.averageLevel = (results.statGrowth.startingStats.level + results.finalLevel) / 2;
+
+    // Calculate averages
+    if (results.combatResults.totalCombats > 0) {
+      results.combatResults.averageExperiencePerCombat /= results.combatResults.totalCombats;
+    }
+
+    results.averageRewardsPerAction.experience = results.totalExperience / results.totalActions;
+
+    console.log(`Simulation completed in ${Date.now() - startTime}ms`);
+    console.log(`Results:`, JSON.stringify(results, null, 2));
+
+    return results;
+  }
+
+  function calculateStandardDeviation(values: number[]): number {
+    const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    return Math.sqrt(variance);
+  }
+});

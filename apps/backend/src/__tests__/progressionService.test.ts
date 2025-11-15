@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { describe, expect, it, beforeEach, jest } from '@jest/globals';
 import { PlayerProgressionService } from '../progression/service';
 import { InMemoryProgressionRepository } from '../storage/inMemoryProgressionRepository';
 
@@ -11,7 +11,7 @@ describe('PlayerProgressionService', () => {
     const repository = new InMemoryProgressionRepository();
     service = new PlayerProgressionService(
       repository,
-      { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+      { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
       () => clockNow
     );
   });
