@@ -1,0 +1,186 @@
+import { describe, expect, it, beforeEach, jest } from '@jest/globals';
+import { PlayerProgressionService } from '../progression/service';
+import { InMemoryProgressionRepository } from '../storage/inMemoryProgressionRepository';
+import { PlayerStats } from '@shared';
+
+describe('Stat Growth Tests', () => {
+  let service: PlayerProgressionService;
+  let testPlayerId: string;
+
+  beforeEach(() => {
+    const repository = new InMemoryProgressionRepository();
+    service = new PlayerProgressionService(
+      repository,
+      { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
+      () => Date.UTC(2023, 0, 1, 0, 0, 0)
+    );
+    testPlayerId = 'test-player';
+  });
+
+  describe('Base stat progression', () => {
+    it('should award correct stat points per level', async () => {
+      const player = await service.getOrCreatePlayer(testPlayerId);
+      const initialStatPoints = player.stats.statPoints;
+      
+      // Level up to level 2
+      await service.addExperience(testPlayerId, 300);
+      const updatedPlayer = await service.getOrCreatePlayer(testPlayerId);
+      
+      expect(updatedPlayer.stats.level).toBe(2);
+      expect(updatedPlayer.stats.statPoints).toBe(initialStatPoints + 3); // 3 points per level
+    });
+
+    it('should allow stat point allocation', async () => {
+      const player = await service.getOrCreatePlayer(testPlayerId);
+      
+      // Level up to get stat points
+      await service.addExperience(testPlayerId, 300);
+      
+      // Allocate stat points
+      await service.allocateStatPoints(testPlayerId, { strength: 2, agility: 1 });
+      const updatedPlayer = await service.getOrCreatePlayer(testPlayerId);
+      
+      expect(updatedPlayer.stats.strength).toBe(player.stats.strength + 2);
+      expect(updatedPlayer.stats.agility).toBe(player.stats.agility + 1);
+      expect(updatedPlayer.stats.statPoints).toBe(0); // All points spent
+    });
+
+    it('should prevent invalid stat allocation', async () => {
+      await service.addExperience(testPlayerId, 300);
+      
+      // Try to allocate more points than available
+      await expect(
+        service.allocateStatPoints(testPlayerId, { strength: 10 })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('Derived stats calculation', () => {
+    it('should calculate derived stats correctly', () => {
+      const baseStats: PlayerStats = {
+        level: 5,
+        health: 100,
+        maxHealth: 100,
+        attack: 10,
+        defense: 8,
+        speed: 10,
+        strength: 15,
+        agility: 12,
+        intelligence: 8,
+        statPoints: 0,
+      };
+
+      const derivedStats = service.calculateDerivedStats(baseStats);
+      
+      // Strength should increase attack
+      expect(derivedStats.attack).toBeGreaterThan(baseStats.attack);
+      
+      // Agility should increase speed
+      expect(derivedStats.speed).toBeGreaterThan(baseStats.speed);
+      
+      // Intelligence should affect magical properties
+      expect(derivedStats.intelligence).toBe(baseStats.intelligence);
+    });
+
+    it('should scale stats with level', () => {
+      const level1Stats: PlayerStats = {
+        level: 1,
+        health: 100,
+        maxHealth: 100,
+        attack: 10,
+        defense: 8,
+        speed: 10,
+        strength: 10,
+        agility: 10,
+        intelligence: 10,
+        statPoints: 0,
+      };
+
+      const level10Stats: PlayerStats = {
+        level: 10,
+        health: 100,
+        maxHealth: 100,
+        attack: 10,
+        defense: 8,
+        speed: 10,
+        strength: 10,
+        agility: 10,
+        intelligence: 10,
+        statPoints: 0,
+      };
+
+      const derived1 = service.calculateDerivedStats(level1Stats);
+      const derived10 = service.calculateDerivedStats(level10Stats);
+
+      // Higher level should have better derived stats
+      expect(derived10.maxHealth).toBeGreaterThan(derived1.maxHealth);
+    });
+  });
+
+  describe('Stat growth balance', () => {
+    it('should maintain balanced stat progression', async () => {
+      // Simulate progression through multiple levels
+      const levels = [1, 5, 10, 15, 20];
+      const statProgression: number[] = [];
+      
+      for (const targetLevel of levels) {
+        const playerId = `test-player-${targetLevel}`;
+        const player = await service.getOrCreatePlayer(playerId);
+        
+        // Calculate XP needed for target level
+        const xpNeeded = PlayerProgressionService.calculateCumulativeXp(targetLevel);
+        await service.addExperience(playerId, xpNeeded);
+        
+        // Allocate stat points evenly
+        const statPoints = player.stats.statPoints;
+        const evenDistribution = {
+          strength: Math.floor(statPoints / 3),
+          agility: Math.floor(statPoints / 3),
+          intelligence: statPoints - 2 * Math.floor(statPoints / 3),
+        };
+        
+        await service.allocateStatPoints(playerId, evenDistribution);
+        
+        const updatedPlayer = await service.getOrCreatePlayer(playerId);
+        const totalStats = updatedPlayer.stats.strength + 
+                          updatedPlayer.stats.agility + 
+                          updatedPlayer.stats.intelligence;
+        statProgression.push(totalStats);
+      }
+      
+      // Stat progression should be roughly linear
+      for (let i = 1; i < statProgression.length; i++) {
+        const growth = statProgression[i] - statProgression[i - 1];
+        expect(growth).toBeGreaterThan(0);
+        expect(growth).toBeLessThan(20); // Reasonable growth per level range
+      }
+    });
+
+    it('should prevent stat dumping in single category', async () => {
+      // Test that balanced stat allocation is encouraged
+      await service.addExperience(testPlayerId, 1000); // Multiple levels
+      
+      const player = await service.getOrCreatePlayer(testPlayerId);
+      const availablePoints = player.stats.statPoints;
+      
+      // This should work - balanced allocation
+      await service.allocateStatPoints(testPlayerId, {
+        strength: Math.floor(availablePoints / 3),
+        agility: Math.floor(availablePoints / 3),
+        intelligence: availablePoints - 2 * Math.floor(availablePoints / 3),
+      });
+      
+      // Reset and try extreme allocation (should still work but might be suboptimal)
+      const player2 = await service.getOrCreatePlayer('test-player-2');
+      await service.addExperience('test-player-2', 1000);
+      
+      const player2Updated = await service.getOrCreatePlayer('test-player-2');
+      const allPointsInStrength = player2Updated.stats.statPoints;
+      
+      await service.allocateStatPoints('test-player-2', { strength: allPointsInStrength });
+      
+      const finalPlayer2 = await service.getOrCreatePlayer('test-player-2');
+      expect(finalPlayer2.stats.strength).toBeGreaterThan(finalPlayer2.stats.agility);
+    });
+  });
+});

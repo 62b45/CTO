@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from '@jest/globals';
 import { LootboxService } from '../lootbox/service';
 import { ProfessionService } from '../professions/service';
 import { EconomyService } from '../economy/service';
@@ -7,9 +7,9 @@ import { FileInventoryRepository } from '../storage/inventoryRepository';
 import path from 'path';
 
 const noopLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 describe('LootboxService', () => {

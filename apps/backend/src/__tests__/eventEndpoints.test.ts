@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from '@jest/globals';
 import request from 'supertest';
 import { createApp } from '../http/app';
 import { ActionCooldownService } from '../cooldowns/service';
@@ -7,9 +7,9 @@ import { EventService } from '../events/service';
 import path from 'path';
 
 const noopLogger = {
-  error: vi.fn(),
-  info: vi.fn(),
-  warn: vi.fn(),
+  error: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
 };
 
 describe('Event Endpoints', () => {

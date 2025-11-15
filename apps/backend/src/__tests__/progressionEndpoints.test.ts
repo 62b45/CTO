@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi, afterEach } from '@jest/globals';
 import type { Express } from 'express';
 import { createApp } from '../http/app';
 import { ActionCooldownService } from '../cooldowns/service';
@@ -8,9 +8,9 @@ import { InMemoryCooldownRepository } from '../storage/inMemoryCooldownRepositor
 import { InMemoryProgressionRepository } from '../storage/inMemoryProgressionRepository';
 
 const noopLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 describe('Player progression API endpoints', () => {
@@ -19,8 +19,8 @@ describe('Player progression API endpoints', () => {
   let app: Express;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(Date.UTC(2023, 0, 1, 0, 0, 0)));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(Date.UTC(2023, 0, 1, 0, 0, 0)));
 
     const cooldownRepository = new InMemoryCooldownRepository();
     const progressionRepository = new InMemoryProgressionRepository();
@@ -40,8 +40,8 @@ describe('Player progression API endpoints', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
+    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   describe('GET /players/:playerId/progression', () => {

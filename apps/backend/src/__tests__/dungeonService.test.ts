@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from '@jest/globals';
 import { DungeonService } from '../dungeons/service';
 import { InMemoryDungeonRepository } from '../storage/dungeonRepository';
 import { PlayerProgressionService } from '../progression/service';
 import { InMemoryProgressionRepository } from '../storage/inMemoryProgressionRepository';
 
 const noopLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 describe('DungeonService', () => {
@@ -15,8 +15,8 @@ describe('DungeonService', () => {
   let progressionService: PlayerProgressionService;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(Date.UTC(2024, 0, 1, 0, 0, 0)));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(Date.UTC(2024, 0, 1, 0, 0, 0)));
 
     const progressionRepository = new InMemoryProgressionRepository();
     progressionService = new PlayerProgressionService(
@@ -35,8 +35,8 @@ describe('DungeonService', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
+    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   async function levelPlayer(playerId: string, targetLevel: number): Promise<void> {

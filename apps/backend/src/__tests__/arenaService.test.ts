@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from '@jest/globals';
 import { ArenaService } from '../arena/service';
 import { PlayerProgressionService } from '../progression/service';
 import { InMemoryProgressionRepository } from '../storage/inMemoryProgressionRepository';
 import { InMemoryArenaRepository } from '../storage/arenaRepository';
 
 const noopLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 describe('ArenaService', () => {
@@ -15,8 +15,8 @@ describe('ArenaService', () => {
   let arenaRepository: InMemoryArenaRepository;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(Date.UTC(2024, 0, 1, 0, 0, 0)));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(Date.UTC(2024, 0, 1, 0, 0, 0)));
     const progressionRepository = new InMemoryProgressionRepository();
     progressionService = new PlayerProgressionService(
       progressionRepository,
@@ -27,8 +27,8 @@ describe('ArenaService', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
+    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   function createRng(values: number[]): () => number {

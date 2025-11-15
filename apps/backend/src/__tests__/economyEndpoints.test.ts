@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi, afterEach } from '@jest/globals';
 import type { Express } from 'express';
 import { createApp } from '../http/app';
 import { ActionCooldownService } from '../cooldowns/service';
@@ -10,9 +10,9 @@ import { InMemoryProfessionsRepository } from '../storage/professionsRepository'
 import { InMemoryInventoryRepository } from '../storage/inventoryRepository';
 
 const noopLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 describe('Economy API endpoints', () => {
@@ -21,8 +21,8 @@ describe('Economy API endpoints', () => {
   let economyService: EconomyService;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(Date.UTC(2023, 0, 1, 0, 0, 0)));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(Date.UTC(2023, 0, 1, 0, 0, 0)));
 
     const cooldownRepository = new InMemoryCooldownRepository();
     const professionsRepository = new InMemoryProfessionsRepository();
@@ -55,8 +55,8 @@ describe('Economy API endpoints', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
+    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   describe('GET /shop/items', () => {
@@ -288,8 +288,8 @@ describe('Profession API endpoints', () => {
   let professionService: ProfessionService;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(Date.UTC(2023, 0, 1, 0, 0, 0)));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(Date.UTC(2023, 0, 1, 0, 0, 0)));
 
     const cooldownRepository = new InMemoryCooldownRepository();
     const professionsRepository = new InMemoryProfessionsRepository();
@@ -313,8 +313,8 @@ describe('Profession API endpoints', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
+    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   describe('GET /players/:playerId/professions', () => {
