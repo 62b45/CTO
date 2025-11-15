@@ -6,6 +6,7 @@ const navigation = [
   { name: 'Dashboard', to: '/dashboard' },
   { name: 'Dungeons', to: '/dungeons' },
   { name: 'Arena', to: '/arena' },
+  { name: 'Lootbox', to: '/lootbox' },
   { name: 'Inventory', to: '/inventory' },
   { name: 'Crafting', to: '/crafting' },
   { name: 'About', to: '/about' },
