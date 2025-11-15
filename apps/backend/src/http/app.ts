@@ -228,6 +228,13 @@ export function createApp({
 
   app.use(express.json());
 
+  app.get('/health', (_req, res) => {
+    res.json({
+      success: true,
+      status: 'healthy',
+    });
+  });
+
   app.get('/actions', (_req, res) => {
     res.json({
       success: true,

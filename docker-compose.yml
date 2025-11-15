@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Backend service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-runtime
+    container_name: game-backend
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: file:/app/data/dev.db
+      COOLDOWN_DB_PATH: /app/data/cooldowns.json
+      PROGRESSION_DB_PATH: /app/data/progression.json
+      PROFESSIONS_DB_PATH: /app/data/professions.json
+      INVENTORY_DB_PATH: /app/data/inventory.json
+      DUNGEON_DB_PATH: /app/data/dungeons.json
+      ARENA_DB_PATH: /app/data/arena.json
+      LOG_LEVEL: info
+    ports:
+      - "3001:3001"
+    volumes:
+      # Mount SQLite database and JSON data files for persistence
+      - game-data:/app/data
+    networks:
+      - game-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # Frontend service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-runtime
+      args:
+        VITE_API_URL: http://localhost:3001
+    container_name: game-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - game-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  game-network:
+    driver: bridge
+
+volumes:
+  # Named volume for SQLite database and JSON file persistence
+  game-data:
+    driver: local

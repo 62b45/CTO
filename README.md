@@ -136,6 +136,149 @@ pnpm format
 pnpm type-check
 ```
 
+## Docker Deployment
+
+### Prerequisites
+
+- Docker (v20.10+)
+- Docker Compose (v1.29+)
+
+### Quick Start
+
+Start the full stack with a single command:
+
+```bash
+docker compose up
+```
+
+This will:
+1. Build multi-stage images for frontend and backend
+2. Start both services with a bridge network
+3. Create a persistent volume for SQLite database and JSON files
+4. Make the application accessible at `http://localhost`
+
+### Production Build
+
+```bash
+# Build images
+docker compose build
+
+# Run services
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+### Accessing the Application
+
+- **Frontend**: http://localhost (on port 80)
+- **Backend API**: http://localhost:3001
+- **API via Frontend**: http://localhost/api/* (proxied through nginx)
+
+### Data Persistence
+
+Both SQLite database (`dev.db`) and JSON data files are stored in a named Docker volume (`game-data`), ensuring data persists across container restarts:
+
+```bash
+# Volume location on host
+docker volume inspect game-data
+```
+
+#### Data Files Stored
+
+- `dev.db` - SQLite database (Prisma ORM)
+- `cooldowns.json` - Action cooldown tracking
+- `progression.json` - Player progression data
+- `professions.json` - Player profession levels
+- `inventory.json` - Inventory items tracking
+- `dungeons.json` - Dungeon run history
+- `arena.json` - Arena battle records
+
+### Environment Variables
+
+Docker services use the following environment variables (configured in `docker-compose.yml`):
+
+**Backend**:
+- `NODE_ENV=production` - Environment mode
+- `PORT=3001` - Backend port
+- `DATABASE_URL=file:/app/data/dev.db` - SQLite database path
+- `*_DB_PATH` - JSON file storage paths for legacy data
+- `LOG_LEVEL=info` - Logging level
+
+**Frontend**:
+- Built with production dependencies only
+- API URL automatically configured to proxy through nginx
+
+### Architecture
+
+The deployment uses a multi-stage Docker build:
+
+1. **Backend Builder**: Compiles TypeScript and generates Prisma client
+2. **Frontend Builder**: Builds React app with Vite
+3. **Backend Runtime**: Node.js runtime with production dependencies
+4. **Frontend Runtime**: Nginx web server serving static assets and proxying API requests
+
+### Health Checks
+
+Both services include health checks:
+
+```bash
+# Check backend health
+curl http://localhost:3001/health
+
+# Check frontend health
+curl http://localhost/health
+```
+
+Services are automatically restarted if health checks fail.
+
+### Development vs Production
+
+**Development** (local machine):
+```bash
+pnpm install
+pnpm dev
+```
+
+**Production** (Docker):
+```bash
+docker compose up
+```
+
+Key differences:
+- Docker uses compiled/built artifacts, not source files
+- Persistent volumes replace local file system
+- Nginx reverse proxy instead of Vite dev server
+- Production optimizations enabled
+
+### Troubleshooting
+
+**Check service status:**
+```bash
+docker compose ps
+```
+
+**View service logs:**
+```bash
+docker compose logs backend
+docker compose logs frontend
+```
+
+**Restart services:**
+```bash
+docker compose restart
+```
+
+**Reset everything (including data):**
+```bash
+docker compose down -v
+docker compose up
+```
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in your environment-specific values:
