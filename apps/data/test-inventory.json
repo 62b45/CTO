@@ -1,21 +1,21 @@
 {
   "test-player-8": {
     "playerId": "test-player-8",
-    "coins": 25000,
+    "coins": 31000,
     "gems": 50,
     "items": [],
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2025-11-14T16:24:57.183Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.183Z"
+    "updatedAt": "2025-11-15T15:58:54.459Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.458Z"
   },
   "test-player-9": {
     "playerId": "test-player-9",
-    "coins": 8600,
+    "coins": 10500,
     "gems": 50,
     "items": [],
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2025-11-14T16:24:57.188Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.188Z"
+    "updatedAt": "2025-11-15T15:58:54.464Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.464Z"
   },
   "test-player-10": {
     "playerId": "test-player-10",
@@ -28,34 +28,34 @@
   },
   "test-player-11": {
     "playerId": "test-player-11",
-    "coins": 20600,
+    "coins": 25500,
     "gems": 50,
     "items": [],
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2025-11-14T16:24:57.202Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.202Z"
+    "updatedAt": "2025-11-15T15:58:54.483Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.483Z"
   },
   "test-player-12": {
     "playerId": "test-player-12",
-    "coins": 38600,
+    "coins": 48000,
     "gems": 50,
     "items": [],
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2025-11-14T16:24:57.229Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.229Z"
+    "updatedAt": "2025-11-15T15:58:54.507Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.507Z"
   },
   "test-player-13": {
     "playerId": "test-player-13",
-    "coins": 171600,
+    "coins": 217600,
     "gems": 50,
     "items": [],
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2025-11-14T16:24:57.595Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.595Z"
+    "updatedAt": "2025-11-15T15:58:54.754Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.754Z"
   },
   "test-player-14": {
     "playerId": "test-player-14",
-    "coins": 40600,
+    "coins": 50500,
     "gems": 50,
     "items": [],
     "createdAt": "2023-01-01T00:00:00.000Z",
@@ -64,7 +64,7 @@
   },
   "test-player-15": {
     "playerId": "test-player-15",
-    "coins": 270000,
+    "coins": 360000,
     "gems": 50,
     "items": [],
     "createdAt": "2023-01-01T00:00:00.000Z",
@@ -73,38 +73,38 @@
   },
   "test-player-4": {
     "playerId": "test-player-4",
-    "coins": 4600,
+    "coins": 5500,
     "gems": 50,
     "items": [],
     "createdAt": "2025-11-14T16:23:02.729Z",
-    "updatedAt": "2025-11-14T16:24:57.149Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.149Z"
+    "updatedAt": "2025-11-15T15:58:54.425Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.425Z"
   },
   "test-player-5": {
     "playerId": "test-player-5",
-    "coins": 4600,
+    "coins": 5500,
     "gems": 50,
     "items": [],
     "createdAt": "2025-11-14T16:23:02.754Z",
-    "updatedAt": "2025-11-14T16:24:57.164Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.164Z"
+    "updatedAt": "2025-11-15T15:58:54.438Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.438Z"
   },
   "test-player-6": {
     "playerId": "test-player-6",
-    "coins": 4600,
+    "coins": 5500,
     "gems": 50,
     "items": [],
     "createdAt": "2025-11-14T16:23:02.764Z",
-    "updatedAt": "2025-11-14T16:24:57.173Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.173Z"
+    "updatedAt": "2025-11-15T15:58:54.448Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.448Z"
   },
   "test-player-7": {
     "playerId": "test-player-7",
-    "coins": 4600,
+    "coins": 5500,
     "gems": 50,
     "items": [],
     "createdAt": "2025-11-14T16:23:02.771Z",
-    "updatedAt": "2025-11-14T16:24:57.179Z",
-    "lastTransactionAt": "2025-11-14T16:24:57.179Z"
+    "updatedAt": "2025-11-15T15:58:54.454Z",
+    "lastTransactionAt": "2025-11-15T15:58:54.454Z"
   }
 }
