@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "start": "node dist/index.js",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
     "clean": "rm -rf dist",
     "test": "jest",
     "db:migrate": "prisma migrate dev",
@@ -18,12 +18,15 @@
   "dependencies": {
     "@shared": "workspace:*",
     "@prisma/client": "^5.8.0",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
     "@types/supertest": "^2.0.12",
+    "@types/cors": "^2.8.17",
     "prisma": "^5.8.0",
     "supertest": "^6.3.4",
     "tsx": "^4.7.0",
