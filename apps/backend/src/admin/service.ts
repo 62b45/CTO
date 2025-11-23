@@ -1,5 +1,5 @@
 import type { PlayerStats } from '@shared';
-import type { ActionType } from '../actions/metadata';
+import { ACTION_TYPES, type ActionType } from '../actions/metadata';
 import type { PlayerProgressionService } from '../progression/service';
 import type { ProfessionService } from '../professions/service';
 import type { EconomyService } from '../economy/service';
@@ -160,15 +160,7 @@ export class AdminService {
       `[AdminService] Resetting all cooldowns for player ${playerId}`
     );
 
-    const actions: ActionType[] = [
-      'gather',
-      'craft',
-      'enchant',
-      'trade',
-      'explore',
-    ];
-
-    for (const action of actions) {
+    for (const action of ACTION_TYPES) {
       await this.cooldownService.clearCooldown(playerId, action);
     }
 

@@ -5,7 +5,7 @@ import type {
   PlayerDungeonState,
   PlayerArenaState,
 } from '@shared';
-import type { ActionType } from '../actions/metadata';
+import { ACTION_TYPES, type ActionType } from '../actions/metadata';
 import type { CooldownEntry } from '../storage/cooldownRepository';
 import type { ProgressionRepository } from '../storage/progressionRepository';
 import type { ProfessionsRepository } from '../storage/professionsRepository';
@@ -24,7 +24,7 @@ export interface ExportedPlayerState {
   inventory?: PlayerInventory;
   dungeons?: PlayerDungeonState;
   arena?: PlayerArenaState;
-  cooldowns?: Record<ActionType, CooldownEntry>;
+  cooldowns?: Partial<Record<ActionType, CooldownEntry>>;
 }
 
 export interface ImportValidationError {
@@ -84,16 +84,9 @@ export class PlayerStateService {
     const dungeons = await this.dungeonRepository.get(playerId);
     const arena = await this.arenaRepository.get(playerId);
 
-    const cooldowns: Record<string, CooldownEntry> = {};
-    const actions: ActionType[] = [
-      'gather',
-      'craft',
-      'enchant',
-      'trade',
-      'explore',
-    ];
+    const cooldowns: Partial<Record<ActionType, CooldownEntry>> = {};
 
-    for (const action of actions) {
+    for (const action of ACTION_TYPES) {
       const cooldown = await this.cooldownRepository.get(playerId, action);
       if (cooldown) {
         cooldowns[action] = cooldown;
@@ -109,7 +102,8 @@ export class PlayerStateService {
       inventory: inventory ?? undefined,
       dungeons: dungeons ?? undefined,
       arena: arena ?? undefined,
-      cooldowns: Object.keys(cooldowns).length > 0 ? cooldowns as Record<ActionType, CooldownEntry> : undefined,
+      cooldowns:
+        Object.keys(cooldowns).length > 0 ? cooldowns : undefined,
     };
   }
 
