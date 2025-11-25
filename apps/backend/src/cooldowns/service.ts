@@ -38,7 +38,7 @@ type Logger = Pick<Console, 'info' | 'warn' | 'error'>;
 
 export class ActionCooldownService {
   constructor(
-    private readonly repository: CooldownRepository,
+    public readonly repository: CooldownRepository,
     private readonly logger: Logger = console,
     private readonly clock: Clock = () => Date.now()
   ) {}

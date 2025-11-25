@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import type { PlayerInventory } from '../../shared/src/types';
+import type { PlayerInventory } from '@shared';
 
 export interface InventoryRepository {
   get(playerId: string): Promise<PlayerInventory | null>;

@@ -3,7 +3,7 @@ import type {
   InventoryItem,
   ShopItem,
   ProfessionType,
-} from '../../shared/src/types';
+} from '@shared';
 import type { InventoryRepository } from '../storage/inventoryRepository';
 import type { ProfessionService } from '../professions/service';
 

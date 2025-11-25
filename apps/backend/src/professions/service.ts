@@ -2,7 +2,7 @@ import type {
   PlayerProfessions,
   ProfessionLevel,
   ProfessionType,
-} from '../../shared/src/types';
+} from '@shared';
 import type { ProfessionsRepository } from '../storage/professionsRepository';
 
 type Logger = Pick<Console, 'info' | 'warn' | 'error'>;

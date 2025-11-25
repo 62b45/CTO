@@ -34,6 +34,7 @@ import type { AdminService } from '../admin/service';
 import type { CraftingService } from '../crafting/service';
 import type { EquipmentService } from '../equipment/service';
 import { createAdminAuthMiddleware } from '../admin/middleware';
+import { prisma } from '../lib/prisma';
 
 export interface CreateAppOptions {
   service: ActionCooldownService;
@@ -233,6 +234,47 @@ export function createApp({
       success: true,
       status: 'healthy',
     });
+  });
+
+  app.get('/api/players/:playerId', async (req: Request<{ playerId: string }>, res: Response) => {
+    try {
+      const { playerId } = req.params;
+      
+      const player = await prisma.player.findUnique({
+        where: { id: playerId },
+        include: {
+          inventoryItems: {
+            include: {
+              itemDefinition: true,
+            },
+          },
+          professionEntries: true,
+          cooldownEntries: true,
+        },
+      });
+
+      if (!player) {
+        res.status(404).json({
+          success: false,
+          message: `Player with ID ${playerId} not found`,
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: player,
+      });
+    } catch (error) {
+      errLogger.error(
+        'Error fetching player: %s',
+        (error as Error).stack ?? String(error)
+      );
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+      });
+    }
   });
 
   app.get('/actions', (_req, res) => {

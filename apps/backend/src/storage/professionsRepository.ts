@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import type { PlayerProfessions } from '../../shared/src/types';
+import type { PlayerProfessions } from '@shared';
 
 export interface ProfessionsRepository {
   get(playerId: string): Promise<PlayerProfessions | null>;
